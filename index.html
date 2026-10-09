@@ -1,0 +1,2136 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Органиграмма АНПЗ</title>
+<meta name="description" content="Интерактивная структура подразделений, руководства и сотрудников АНПЗ (прототип на моковых данных)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
+<style>
+:root{
+  --bg:#F4F6F9; --surface:#FFFFFF; --surface-2:#F8FAFC; --surface-3:#EDF1F6;
+  --text:#1A2433; --muted:#5B6B7F; --faint:#8492A6; --border:#E2E8F0; --line:#B3C0D0;
+  --primary:#0B3B6F; --primary-ink:#0B3B6F; --accent:#1E88E5; --amber:#F2A900; --amber-soft:rgba(242,169,0,.16);
+  --header-bg:#0B3B6F; --header-ink:#FFFFFF; --header-muted:rgba(255,255,255,.7); --header-field:rgba(255,255,255,.12);
+  --shadow:0 2px 8px rgba(11,59,111,.08); --shadow-lg:0 16px 40px rgba(11,59,111,.18);
+  --st-work:#1E9E5A; --st-vacation:#1E6FD9; --st-sick:#E07A1F; --st-trip:#7E57C2; --st-training:#0E9AA7; --st-other:#8A96A6;
+  --radius:12px; --focus:0 0 0 3px rgba(30,136,229,.4);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D1520; --surface:#152030; --surface-2:#1A2738; --surface-3:#22324A;
+    --text:#E7EDF5; --muted:#9AAABF; --faint:#74859B; --border:#263649; --line:#41536C;
+    --primary-ink:#7DB4F0; --accent:#4BA3F0; --amber:#F5B82E; --amber-soft:rgba(245,184,46,.16);
+    --header-bg:#0A1F38; --header-field:rgba(255,255,255,.09);
+    --shadow:0 2px 8px rgba(0,0,0,.35); --shadow-lg:0 16px 40px rgba(0,0,0,.55);
+    --st-work:#34C276; --st-vacation:#5592F2; --st-sick:#F0953E; --st-trip:#A486E4; --st-training:#2CB9C5; --st-other:#8F9CAE;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D1520; --surface:#152030; --surface-2:#1A2738; --surface-3:#22324A;
+  --text:#E7EDF5; --muted:#9AAABF; --faint:#74859B; --border:#263649; --line:#41536C;
+  --primary-ink:#7DB4F0; --accent:#4BA3F0; --amber:#F5B82E; --amber-soft:rgba(245,184,46,.16);
+  --header-bg:#0A1F38; --header-field:rgba(255,255,255,.09);
+  --shadow:0 2px 8px rgba(0,0,0,.35); --shadow-lg:0 16px 40px rgba(0,0,0,.55);
+  --st-work:#34C276; --st-vacation:#5592F2; --st-sick:#F0953E; --st-trip:#A486E4; --st-training:#2CB9C5; --st-other:#8F9CAE;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:400 14.5px/1.5 Inter,"PT Sans",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--primary-ink)}
+:focus-visible{outline:none;box-shadow:var(--focus);border-radius:8px}
+.ic{flex:none;display:inline-block;vertical-align:middle}
+.muted{color:var(--muted)}
+.mono{font-variant-numeric:tabular-nums}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- shell ---------- */
+.app{display:grid;grid-template-rows:auto 1fr;height:100vh;height:100dvh}
+.top{background:var(--header-bg);color:var(--header-ink);display:flex;align-items:center;gap:20px;padding:10px 20px;min-height:62px;position:relative;z-index:30}
+.brand{display:flex;align-items:center;gap:12px;color:inherit;text-decoration:none;flex:none}
+.logo{width:40px;height:40px;border-radius:10px;background:linear-gradient(140deg,#F2A900 0 38%,#fff 38% 100%);display:grid;place-items:center;position:relative;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+.logo span{font-weight:700;font-size:11px;letter-spacing:.02em;color:#0B3B6F;margin-left:10px;margin-top:12px}
+.brand-txt{display:flex;flex-direction:column;line-height:1.2}
+.brand-txt b{font-size:16px;font-weight:700}
+.brand-txt small{font-size:11.5px;color:var(--header-muted)}
+.search{position:relative;flex:1;max-width:620px;margin:0 auto}
+.search-box{display:flex;align-items:center;gap:8px;background:var(--header-field);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:0 10px;height:40px;transition:background .15s,border-color .15s}
+.search-box:focus-within{background:#fff;color:#1A2433;border-color:#fff}
+.search-box input{flex:1;min-width:0;background:none;border:0;outline:0;height:100%;color:inherit}
+.search-box input::placeholder{color:var(--header-muted)}
+.search-box:focus-within input::placeholder{color:#8492A6}
+.search-box kbd{font:500 11px Inter,sans-serif;border:1px solid rgba(255,255,255,.3);border-radius:5px;padding:1px 6px;color:var(--header-muted);white-space:nowrap}
+.search-box:focus-within kbd{border-color:#D5DCE5;color:#8492A6}
+.q-results{position:absolute;top:calc(100% + 8px);left:0;right:0;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-lg);max-height:min(70vh,520px);overflow:auto;padding:6px}
+.q-group{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);padding:10px 10px 4px}
+.q-item{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;text-align:left;padding:8px 10px;border-radius:8px}
+.q-item:hover,.q-item.active{background:var(--surface-3)}
+.q-item .q-txt{flex:1;min-width:0;display:flex;flex-direction:column}
+.q-item .q-txt b{font-weight:600;font-size:14px}
+.q-item .q-txt small{color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.q-item mark{background:var(--amber-soft);color:inherit;border-radius:3px;padding:0 1px}
+.q-meta{font-size:12px;color:var(--muted);white-space:nowrap}
+.q-foot{display:flex;justify-content:space-between;gap:8px;padding:8px 10px 4px;border-top:1px solid var(--border);margin-top:6px;font-size:12px;color:var(--faint)}
+.q-empty{padding:18px 12px;color:var(--muted);text-align:center}
+.top-actions{display:flex;align-items:center;gap:10px;flex:none}
+.seg{display:inline-flex;background:var(--surface-3);border-radius:9px;padding:3px;gap:2px}
+.seg button{border:0;background:none;padding:5px 11px;border-radius:7px;font-size:13px;font-weight:500;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
+.top .seg{background:rgba(255,255,255,.1)}
+.top .seg button{color:var(--header-muted)}
+.top .seg button[aria-pressed="true"]{background:#fff;color:#0B3B6F}
+.icon-btn{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:9px;border:1px solid var(--border);background:var(--surface);color:var(--text)}
+.icon-btn:hover{background:var(--surface-3)}
+.icon-btn.sm{width:30px;height:30px;border-radius:7px;border-color:transparent;background:none;color:var(--muted)}
+.icon-btn.sm:hover{background:var(--surface-3);color:var(--text)}
+.top .icon-btn{background:rgba(255,255,255,.1);border-color:transparent;color:#fff}
+.top .icon-btn:hover{background:rgba(255,255,255,.2)}
+.user{position:relative}
+.user-btn{display:flex;align-items:center;gap:8px;border:0;background:rgba(255,255,255,.1);color:#fff;border-radius:22px;padding:3px 12px 3px 3px}
+.user-btn:hover{background:rgba(255,255,255,.2)}
+.user-btn .ub-txt{display:flex;flex-direction:column;align-items:flex-start;line-height:1.15;font-size:12.5px}
+.user-btn .ub-txt small{color:var(--header-muted);font-size:11px}
+.menu{position:absolute;right:0;top:calc(100% + 8px);width:280px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-lg);padding:8px;z-index:50}
+.menu h4{margin:8px 8px 4px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.menu .opt{display:flex;align-items:center;gap:10px;width:100%;padding:8px;border:0;background:none;border-radius:8px;text-align:left}
+.menu .opt:hover{background:var(--surface-3)}
+.menu .opt .ck{width:18px;color:var(--accent)}
+.menu .note{font-size:12px;color:var(--muted);padding:6px 8px;border-top:1px solid var(--border);margin-top:6px}
+
+.body{display:grid;grid-template-columns:236px 1fr;min-height:0}
+.side{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;min-height:0;overflow:auto}
+.side nav{display:flex;flex-direction:column;gap:2px;padding:14px 10px}
+.nav-item{display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:9px;color:var(--muted);text-decoration:none;font-weight:500;position:relative}
+.nav-item:hover{background:var(--surface-3);color:var(--text)}
+.nav-item.active{background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--primary-ink)}
+.nav-item.active::before{content:"";position:absolute;left:-10px;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0;background:var(--amber)}
+.nav-count{margin-left:auto;font-size:11.5px;font-weight:600;background:var(--surface-3);color:var(--muted);border-radius:10px;padding:1px 8px}
+.side-foot{margin-top:auto;padding:14px 16px 18px;border-top:1px solid var(--border);font-size:12px;color:var(--muted)}
+.legend{display:grid;gap:6px;margin-bottom:14px}
+.legend div{display:flex;align-items:center;gap:8px}
+.sync-note{display:flex;gap:6px;align-items:flex-start}
+main{min-width:0;min-height:0;overflow:auto;position:relative}
+#view{min-height:100%;height:100%}
+.bottom-nav{display:none}
+
+/* ---------- status ---------- */
+.st-work{--st:var(--st-work)} .st-vacation{--st:var(--st-vacation)} .st-sick{--st:var(--st-sick)}
+.st-trip{--st:var(--st-trip)} .st-training{--st:var(--st-training)} .st-other{--st:var(--st-other)}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:500;line-height:1;padding:4px 8px 4px 6px;border-radius:20px;color:var(--st);background:color-mix(in srgb,var(--st) 13%,transparent);white-space:nowrap}
+.badge.lg{font-size:13px;padding:6px 11px 6px 8px}
+.sdot{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;background:var(--st);color:#fff;flex:none}
+
+/* ---------- avatar ---------- */
+.av{--s:40px;position:relative;width:var(--s);height:var(--s);flex:none;border-radius:50%;background:var(--avc);color:#fff;display:inline-grid;place-items:center;font-weight:600;font-size:calc(var(--s)*.36);letter-spacing:.01em}
+.av-dot{position:absolute;right:-2px;bottom:-2px;width:calc(var(--s)*.34);height:calc(var(--s)*.34);min-width:12px;min-height:12px;border-radius:50%;background:var(--st);border:2px solid var(--surface);display:grid;place-items:center;color:#fff}
+.av-dot svg{width:62%;height:62%}
+
+/* ---------- buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:38px;padding:0 14px;border-radius:9px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-weight:500;font-size:13.5px;text-decoration:none;white-space:nowrap}
+.btn:hover{background:var(--surface-3)}
+.btn-primary{background:var(--primary);border-color:var(--primary);color:#fff}
+.btn-primary:hover{background:#0E4A8A}
+:root[data-theme="dark"] .btn-primary{background:#1D5FA8;border-color:#1D5FA8}
+.btn-ghost{border-color:transparent;background:none;color:var(--muted)}
+.btn-lg{height:46px;font-size:15px;border-radius:11px;flex:1}
+.btn:disabled{opacity:.6;cursor:default}
+.link{border:0;background:none;padding:0;color:var(--primary-ink);font-weight:500;text-align:left;text-decoration:underline;text-decoration-color:color-mix(in srgb,currentColor 35%,transparent);text-underline-offset:2px}
+.link:hover{text-decoration-color:currentColor}
+.chk{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;white-space:nowrap;cursor:pointer}
+.chk input{width:16px;height:16px;accent-color:var(--accent)}
+select,.input{height:38px;border:1px solid var(--border);background:var(--surface);border-radius:9px;padding:0 10px;min-width:0}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+
+/* ---------- structure ---------- */
+.st-wrap{display:flex;flex-direction:column;height:100%}
+.st-head{padding:16px 20px 12px;display:flex;flex-direction:column;gap:12px;border-bottom:1px solid var(--border);background:var(--surface)}
+.summary{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px}
+.summary .sum-label{font-weight:600;margin-right:4px}
+.sum-chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--border);background:var(--surface-2);border-radius:20px;padding:4px 12px 4px 5px;font-size:13px}
+.sum-chip b{font-weight:700}
+.sum-chip:hover{border-color:var(--st)}
+.sum-upd{margin-left:auto;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.st-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.crumbs{display:flex;align-items:center;flex-wrap:wrap;gap:2px;font-size:13px;flex:1;min-width:0}
+.crumbs button{border:0;background:none;color:var(--muted);padding:3px 6px;border-radius:6px}
+.crumbs button:hover{background:var(--surface-3);color:var(--text)}
+.crumbs button:last-child{color:var(--text);font-weight:600}
+.crumbs .sep{color:var(--faint)}
+.st-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.st-tools .seg button{display:inline-flex;align-items:center;gap:6px}
+.viewport{position:relative;flex:1;min-height:0;overflow:hidden;cursor:grab;touch-action:none;background-color:var(--bg);background-image:radial-gradient(color-mix(in srgb,var(--line) 45%,transparent) 1px,transparent 1px);background-size:22px 22px}
+.viewport.dragging{cursor:grabbing}
+.canvas{position:absolute;left:0;top:0;transform-origin:0 0;padding:36px;width:max-content;will-change:transform}
+.canvas.anim{transition:transform .35s cubic-bezier(.2,.7,.2,1)}
+.zoombar{position:absolute;left:16px;bottom:16px;display:flex;align-items:center;gap:2px;background:var(--surface);border:1px solid var(--border);border-radius:11px;box-shadow:var(--shadow);padding:3px}
+.zoombar .icon-btn{border:0;width:34px;height:34px}
+.zoombar .zv{min-width:48px;text-align:center;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.minimap{position:absolute;right:16px;bottom:16px;width:200px;height:130px;background:var(--surface);border:1px solid var(--border);border-radius:11px;box-shadow:var(--shadow);cursor:pointer}
+.hint{position:absolute;left:16px;top:14px;font-size:12px;color:var(--faint);pointer-events:none}
+
+/* tree layout */
+.tn{display:flex;flex-direction:column;align-items:flex-start}
+.tn-root{align-items:center}
+.kids-h{display:flex;align-items:flex-start;padding-top:22px;position:relative;animation:grow .22s ease-out}
+.kids-h::before{content:"";position:absolute;top:0;left:50%;height:22px;border-left:1.5px solid var(--line)}
+.kid-h{position:relative;padding:22px 14px 0}
+.kid-h::before{content:"";position:absolute;top:0;left:0;right:0;border-top:1.5px solid var(--line)}
+.kid-h:first-child::before{left:138px}
+.kid-h:last-child::before{right:auto;width:138px}
+.kid-h:only-child::before{display:none}
+.kid-h::after{content:"";position:absolute;top:0;left:138px;height:22px;border-left:1.5px solid var(--line)}
+.kids-v{margin-left:30px;position:relative;animation:grow .22s ease-out}
+.kid-v{position:relative;padding:12px 0 0 24px}
+.kid-v::before{content:"";position:absolute;left:0;top:0;bottom:0;border-left:1.5px solid var(--line)}
+.kid-v::after{content:"";position:absolute;left:0;top:34px;width:24px;border-top:1.5px solid var(--line)}
+.kid-v:last-child::before{bottom:auto;height:34px;width:24px;border-bottom:1.5px solid var(--line);border-bottom-left-radius:10px}
+.kid-v:last-child::after{display:none}
+@keyframes grow{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+
+.node{width:248px;background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--dir);border-radius:12px;box-shadow:var(--shadow);padding:10px 12px;position:relative;transition:box-shadow .2s,border-color .2s}
+.node:hover{box-shadow:0 6px 18px rgba(11,59,111,.13)}
+.node-root{width:290px}
+.node.active{border-color:var(--amber);border-top-color:var(--amber);box-shadow:0 0 0 3px var(--amber-soft),var(--shadow)}
+.node.pulse{animation:pulse 1.4s ease-out 2}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(242,169,0,.55)}100%{box-shadow:0 0 0 18px rgba(242,169,0,0)}}
+.node-title{display:block;width:100%;text-align:left;font-weight:600;font-size:13px;line-height:1.3;color:var(--text);background:none;border:0;padding:0 0 8px}
+.node-root .node-title{font-size:14px}
+.node-title:hover{color:var(--primary-ink)}
+.node-person{display:flex;gap:10px;align-items:center;width:100%;background:var(--surface-2);border:1px solid transparent;border-radius:10px;padding:7px;text-align:left}
+.node-person:hover{border-color:var(--border);background:var(--surface-3)}
+.np-txt{display:flex;flex-direction:column;min-width:0;gap:1px}
+.np-txt b{font-size:13px;font-weight:600;line-height:1.25}
+.np-txt small{font-size:11.5px;color:var(--muted);line-height:1.3}
+.np-txt .badge{margin-top:4px;align-self:flex-start;font-size:11px;padding:3px 7px 3px 5px}
+.node-meta{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:12px;color:var(--muted)}
+.nm-count{display:inline-flex;align-items:center;gap:4px;font-weight:600}
+.nm-people{display:inline-flex;align-items:center;gap:4px;border:1px solid transparent;background:none;padding:2px 6px;border-radius:7px;font-weight:600;color:var(--muted);font-size:12px}
+.nm-people:hover{background:var(--surface-3);border-color:var(--border);color:var(--primary-ink)}
+
+/* people org chart */
+.pnode{width:248px;background:var(--surface);border:1px solid var(--border);border-top:4px solid var(--st);border-radius:12px;box-shadow:var(--shadow);padding:10px 12px;position:relative;cursor:pointer;text-align:left;transition:box-shadow .2s,transform .15s}
+.pnode:hover{box-shadow:0 8px 22px rgba(11,59,111,.16);transform:translateY(-1px)}
+.pnode:not(.st-work){background:linear-gradient(180deg,color-mix(in srgb,var(--st) 10%,var(--surface)) 0,var(--surface) 70px)}
+.pnode-root{width:300px}
+.pnode.active{box-shadow:0 0 0 3px var(--amber),var(--shadow)}
+.pnode.pulse{animation:pulse 1.4s ease-out 2}
+.pn-chip{display:inline-flex;align-items:center;gap:5px;max-width:100%;font-size:11px;font-weight:600;color:var(--dir);background:color-mix(in srgb,var(--dir) 12%,transparent);border:0;border-radius:6px;padding:3px 7px;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+button.pn-chip:hover{background:color-mix(in srgb,var(--dir) 22%,transparent)}
+.pn-chip-dep{--dir:var(--accent)}
+.pn-main{display:flex;gap:12px;align-items:center}
+.pn-txt{display:flex;flex-direction:column;min-width:0;line-height:1.25}
+.pn-txt b{font-size:14px;font-weight:700}
+.pn-txt span{font-size:13px;font-weight:500}
+.pn-txt small{font-size:11.5px;color:var(--muted);margin-top:3px;line-height:1.3}
+.pnode-root .pn-txt b{font-size:16px}
+.pn-foot{display:flex;align-items:center;gap:6px 8px;margin-top:10px;flex-wrap:wrap}
+.pn-foot .badge{font-size:11px;padding:3px 7px 3px 5px}
+.pn-int{display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums}
+.pn-foot .node-toggle{margin-left:auto}
+.pn-sub{margin-top:8px;padding-top:7px;border-top:1px dashed var(--border);font-size:11.5px;color:var(--muted);display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.pn-sub.warn{color:var(--st-sick)}
+.av-img{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;box-shadow:0 0 0 1px rgba(0,0,0,.06);-webkit-user-drag:none;user-select:none}
+.acc-people{padding:2px 16px 4px 46px}
+.photo-stat{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.photo-stat b{margin-right:auto}
+.photo-strip{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.photo-strip button{border:0;background:none;padding:2px;border-radius:50%;position:relative}
+.photo-strip button.has::after{content:"";position:absolute;inset:0;border-radius:50%;box-shadow:0 0 0 2px var(--st-work)}
+.nm-st{display:flex;gap:6px;flex-wrap:wrap}
+.mc{display:inline-flex;align-items:center;gap:2px;color:var(--st);font-weight:600}
+.node-toggle{margin-left:auto;display:inline-flex;align-items:center;gap:3px;border:1px solid var(--border);background:var(--surface);border-radius:14px;padding:2px 8px 2px 5px;font-size:12px;font-weight:600;color:var(--muted)}
+.node-toggle:hover{color:var(--text);border-color:var(--line)}
+.node-toggle svg{transition:transform .2s}
+.node-toggle[aria-expanded="false"] svg{transform:rotate(-90deg)}
+
+/* list (accordion) */
+.acc-wrap{flex:1;overflow:auto;padding:14px 16px 90px}
+.acc{border-left:3px solid var(--dir);background:var(--surface);border-radius:10px;margin-top:6px;box-shadow:var(--shadow)}
+.acc .acc{box-shadow:none;border-radius:8px;background:var(--surface-2);margin:6px 8px 0 14px}
+.acc .acc .acc{background:var(--surface)}
+.acc.active>.acc-row{background:var(--amber-soft)}
+.acc-row{display:flex;align-items:center;gap:8px;padding:8px 10px 8px 6px;border-radius:8px}
+.acc-tg,.acc-tg-sp{width:30px;height:30px;flex:none;border:0;background:none;border-radius:7px;display:grid;place-items:center;color:var(--muted)}
+.acc-tg:hover{background:var(--surface-3)}
+.acc-tg svg{transition:transform .2s}
+.acc-tg[aria-expanded="true"] svg{transform:rotate(90deg)}
+.acc-main{flex:1;min-width:0;border:0;background:none;text-align:left;padding:2px 0;display:flex;flex-direction:column}
+.acc-name{font-weight:600;font-size:14px;line-height:1.3}
+.acc-sub{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.acc-av{border:0;background:none;padding:2px;border-radius:50%}
+.acc-count{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);font-weight:600;min-width:38px;justify-content:flex-end}
+.acc-kids{padding-bottom:8px}
+
+/* ---------- pages ---------- */
+.page{padding:24px 28px 100px;max-width:1320px;margin:0 auto}
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.page-head h1{margin:0;font-size:24px;font-weight:700;letter-spacing:-.01em}
+.page-head p{margin:4px 0 0}
+.page-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.filters{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px;margin-bottom:14px}
+.f-search{display:flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:9px;padding:0 10px;height:38px;flex:1 1 240px;color:var(--muted);background:var(--surface)}
+.f-search input{border:0;outline:0;background:none;flex:1;min-width:0;height:100%;color:var(--text)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);background:var(--surface);border-radius:20px;padding:5px 11px 5px 8px;font-size:12.5px;font-weight:500;color:var(--muted)}
+.chip svg{color:var(--st)}
+.chip[aria-pressed="true"]{border-color:var(--st);color:var(--st);background:color-mix(in srgb,var(--st) 12%,transparent)}
+.tbl-wrap{overflow:hidden}
+table.tbl{width:100%;border-collapse:collapse;font-size:13.5px}
+.tbl th{text-align:left;font-size:12px;font-weight:600;color:var(--muted);padding:10px 12px;border-bottom:1px solid var(--border);background:var(--surface-2);white-space:nowrap}
+.tbl th button{border:0;background:none;padding:0;font:inherit;color:inherit;display:inline-flex;align-items:center;gap:4px}
+.tbl th button[aria-sort] {color:var(--text)}
+.tbl td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:0}
+.tbl tbody tr:hover td{background:var(--surface-2)}
+.tbl .who{display:flex;align-items:center;gap:10px;border:0;background:none;padding:0;text-align:left}
+.tbl .who b{font-weight:600}
+.tbl .who small{display:block;color:var(--muted);font-size:12px}
+.tbl-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border-top:1px solid var(--border);font-size:13px;color:var(--muted);flex-wrap:wrap}
+.pager{display:flex;gap:4px;align-items:center}
+.pager button{min-width:34px;height:34px;border:1px solid var(--border);background:var(--surface);border-radius:8px;font-size:13px}
+.pager button[aria-current="page"]{background:var(--primary);border-color:var(--primary);color:#fff}
+.pager button:disabled{opacity:.45;cursor:default}
+.empty{padding:48px 16px;text-align:center;color:var(--muted)}
+.empty svg{color:var(--faint);margin-bottom:8px}
+.empty b{display:block;color:var(--text);font-size:15px;margin-bottom:4px}
+
+.lead-gd{display:grid;grid-template-columns:auto 1fr auto;gap:22px;align-items:center;padding:22px;margin-bottom:18px;border-top:4px solid var(--primary)}
+.lead-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.lead-card{padding:18px;border-top:3px solid var(--dir);display:flex;flex-direction:column;gap:12px}
+.lead-top{display:flex;gap:14px;align-items:flex-start;border:0;background:none;padding:0;text-align:left}
+.lead-top h3{margin:0;font-size:15px;font-weight:600;line-height:1.3}
+.lead-top p{margin:2px 0 0;font-size:12.5px;color:var(--muted);line-height:1.35}
+.dir-tag{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--dir)}
+.dir-tag::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--dir)}
+.contacts{display:grid;gap:6px;font-size:13px}
+.contacts div{display:flex;align-items:center;gap:8px;color:var(--muted)}
+.contacts a,.contacts b{color:var(--text);text-decoration:none;font-weight:500}
+.contacts a:hover{color:var(--primary-ink)}
+.lead-actions{display:flex;gap:8px;margin-top:auto}
+.lead-actions .btn{flex:1;height:34px;font-size:13px}
+
+.abs-group{margin-bottom:22px}
+.abs-group h2{display:flex;align-items:center;gap:10px;font-size:15px;margin:0 0 10px}
+.abs-group h2 .cnt{color:var(--muted);font-weight:500}
+.abs-row{display:grid;grid-template-columns:minmax(220px,1.2fr) minmax(160px,.8fr) minmax(240px,1.3fr);gap:14px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--border)}
+.abs-row:last-child{border-bottom:0}
+.abs-who{display:flex;gap:12px;align-items:center;border:0;background:none;padding:0;text-align:left;min-width:0}
+.abs-who b{display:block;font-weight:600}
+.abs-who small{display:block;color:var(--muted);font-size:12px;line-height:1.35}
+.period{font-size:13px}
+.period small{display:block;color:var(--muted);font-size:12px}
+.sub{font-size:13px;line-height:1.45}
+.sub-l{color:var(--muted)}
+.sub-warn{display:flex;gap:6px;align-items:flex-start;margin-top:6px;padding:7px 9px;border-radius:8px;background:color-mix(in srgb,var(--st-sick) 12%,transparent);color:var(--text);font-size:12.5px}
+.sub-warn svg{color:var(--st-sick);margin-top:1px}
+
+.admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.admin-grid .span2{grid-column:1/-1}
+.panel{padding:18px}
+.panel h2{margin:0 0 4px;font-size:16px;display:flex;align-items:center;gap:8px}
+.panel>p{margin:0 0 14px;color:var(--muted);font-size:13px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:13px;margin-bottom:14px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;font-weight:500}
+.progress{height:6px;border-radius:4px;background:var(--surface-3);overflow:hidden;margin:10px 0 2px}
+.progress i{display:block;height:100%;width:0;background:var(--accent);transition:width .25s}
+.res{font-weight:600;font-size:12.5px}
+.res.ok{color:var(--st-work)} .res.warn{color:var(--st-sick)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-grid label{display:flex;flex-direction:column;gap:5px;font-size:12.5px;color:var(--muted);font-weight:500}
+.form-grid .full{grid-column:1/-1}
+.manual-tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:var(--amber);background:var(--amber-soft);padding:2px 7px;border-radius:10px;margin-left:6px;vertical-align:middle}
+:root:not([data-theme="light"]) .manual-tag{color:var(--amber)}
+.swatch{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:6px;background:var(--st);color:#fff}
+.noaccess{max-width:520px;margin:60px auto;text-align:center;padding:36px}
+.noaccess svg{color:var(--faint)}
+.code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px;background:var(--surface-3);padding:2px 6px;border-radius:5px}
+
+/* ---------- drawer ---------- */
+.overlay{position:fixed;inset:0;background:rgba(10,22,40,.38);z-index:60;opacity:0;visibility:hidden;transition:opacity .22s,visibility 0s .22s}
+.overlay.open{opacity:1;visibility:visible;transition:opacity .22s}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(460px,100vw);background:var(--surface);z-index:70;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;transform:translateX(100%);visibility:hidden;transition:transform .24s cubic-bezier(.2,.7,.2,1),visibility 0s .24s;overflow:hidden}
+.drawer.open{transform:none;visibility:visible;transition:transform .24s cubic-bezier(.2,.7,.2,1)}
+.dr-scroll{overflow:auto;flex:1}
+.dr-head{padding:22px 22px 18px;border-bottom:1px solid var(--border);position:relative;background:linear-gradient(180deg,color-mix(in srgb,var(--dir) 9%,var(--surface)),var(--surface));border-top:4px solid var(--dir)}
+.dr-close{position:absolute;right:14px;top:14px}
+.dr-grip{display:none}
+.emp-hero{display:flex;gap:16px;align-items:center;padding-right:40px}
+.emp-hero h2,.dept-hero h2{margin:0;font-size:19px;line-height:1.25;font-weight:700}
+.emp-hero p{margin:3px 0 8px;font-size:13.5px}
+.absent-box{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--surface);border:1px solid var(--border);display:grid;gap:6px}
+.acting{margin-top:10px;font-size:13px;color:var(--muted)}
+.big-actions{display:flex;gap:10px;margin-top:16px}
+.dr-body{padding:6px 22px 26px}
+.fields{margin:0;display:grid}
+.fields>div{display:grid;grid-template-columns:150px 1fr;gap:12px;padding:11px 0;border-bottom:1px solid var(--border);align-items:center}
+.fields dt{color:var(--muted);font-size:13px}
+.fields dd{margin:0;display:flex;align-items:center;gap:6px;min-width:0;flex-wrap:wrap;font-weight:500}
+.fields dd a{text-decoration:none;color:var(--text)}
+.fields dd a:hover{color:var(--primary-ink)}
+.dr-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.dr-actions .btn{height:34px;font-size:13px}
+.dr-note{font-size:12px;color:var(--faint);margin:18px 0 0;line-height:1.5}
+.dept-hero{display:flex;gap:14px;align-items:flex-start;padding-right:40px}
+.dept-ic{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;background:color-mix(in srgb,var(--dir) 15%,transparent);color:var(--dir);flex:none}
+.tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.04em;color:var(--dir);margin-bottom:2px}
+.alt-name{margin:4px 0 0;font-size:12.5px}
+.chain{margin-top:12px;font-size:12.5px;color:var(--muted);line-height:1.6}
+.dr-body section{padding:14px 0;border-bottom:1px solid var(--border)}
+.dr-body section:last-of-type{border-bottom:0}
+.dr-body h3{margin:0 0 8px;font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--faint)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:13.5px}
+.grid2 a{text-decoration:none;font-weight:600;color:var(--text)}
+.person{display:flex;gap:12px;align-items:center;width:100%;border:0;background:none;text-align:left;padding:8px;margin:0 -8px;width:calc(100% + 16px);border-radius:10px}
+.person:hover{background:var(--surface-3)}
+.p-txt{flex:1;min-width:0;display:flex;flex-direction:column}
+.p-txt b{font-weight:600;font-size:13.5px}
+.p-txt small{color:var(--muted);font-size:12px;line-height:1.35}
+.p-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;font-size:12px}
+.sbar{display:flex;height:10px;border-radius:6px;overflow:hidden;background:var(--surface-3);gap:2px}
+.sbar i{background:var(--st);display:block}
+.slegend{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px;font-size:12.5px}
+.slegend span{display:inline-flex;align-items:center;gap:6px}
+.slegend b{font-weight:700}
+.subrow{display:flex;align-items:center;gap:10px;width:100%;border:1px solid var(--border);background:var(--surface);border-radius:9px;padding:9px 10px;margin-bottom:6px;text-align:left;font-weight:500;font-size:13.5px}
+.subrow span:first-child{flex:1}
+.subrow:hover{background:var(--surface-3)}
+
+/* toast */
+.toasts{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:90;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.toast{display:flex;align-items:center;gap:8px;background:#14243A;color:#fff;padding:10px 16px;border-radius:10px;box-shadow:var(--shadow-lg);font-size:13.5px;animation:tin .2s ease-out}
+.toast svg{color:#5FD69A}
+@keyframes tin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* skeleton */
+.sk{background:linear-gradient(90deg,var(--surface-3) 25%,var(--surface-2) 50%,var(--surface-3) 75%);background-size:200% 100%;animation:sh 1.2s infinite linear;border-radius:10px}
+@keyframes sh{to{background-position:-200% 0}}
+.sk-wrap{padding:28px;display:grid;gap:18px;justify-items:center}
+.sk-row{display:flex;gap:18px;flex-wrap:wrap;justify-content:center}
+
+#print-area{display:none}
+.print-only{display:none}
+
+/* ---------- responsive ---------- */
+@media (max-width:1180px){
+  .body{grid-template-columns:72px 1fr}
+  .side nav{padding:12px 8px}
+  .nav-item{justify-content:center;padding:11px}
+  .nav-item span:not(.nav-count){display:none}
+  .nav-count{position:absolute;top:3px;right:3px;padding:0 5px;font-size:10px}
+  .side-foot{display:none}
+  .user-btn .ub-txt{display:none}
+  .user-btn{padding:3px}
+}
+@media (max-width:767px){
+  .app{grid-template-rows:auto 1fr auto}
+  .top{flex-wrap:wrap;gap:10px 10px;padding:10px 16px 12px}
+  .brand-txt small{display:none}
+  .top-actions{margin-left:auto;gap:6px}
+  .search{order:3;flex:1 1 100%;max-width:none}
+  .search-box kbd{display:none}
+  .body{grid-template-columns:1fr}
+  .side{display:none}
+  .bottom-nav{display:flex;background:var(--surface);border-top:1px solid var(--border);padding:4px 4px calc(4px + env(safe-area-inset-bottom))}
+  .bottom-nav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;font-size:10.5px;color:var(--muted);text-decoration:none;border-radius:8px;position:relative;text-align:center;line-height:1.2}
+  .bottom-nav a.active{color:var(--primary-ink);font-weight:600;background:none}
+  .bottom-nav a::before{display:none}
+  .bottom-nav .nav-count{position:absolute;top:2px;left:calc(50% + 6px);right:auto;margin:0;padding:0 5px;font-size:10px;background:var(--st-sick);color:#fff}
+  .st-head{padding:12px 16px}
+  .sum-upd{margin-left:0;width:100%}
+  .st-tools .lbl{display:none}
+  .crumbs{flex:1 1 100%}
+  .acc-wrap{padding:10px 12px 24px}
+  .page{padding:18px 16px 32px}
+  .page-head h1{font-size:20px}
+  .drawer{top:auto;left:0;width:100%;height:94dvh;border-radius:18px 18px 0 0;transform:translateY(100%)}
+  .dr-grip{display:block;width:40px;height:4px;border-radius:2px;background:var(--line);margin:-10px auto 12px}
+  .dr-head{border-top:0;padding:18px 16px 16px}
+  .dr-body{padding:4px 16px 28px}
+  .fields>div{grid-template-columns:1fr;gap:2px}
+  .big-actions .btn-lg{height:52px;font-size:16px}
+  .tbl thead{display:none}
+  .tbl,.tbl tbody,.tbl tr,.tbl td{display:block;width:100%}
+  .tbl tr{padding:10px 12px;border-bottom:1px solid var(--border)}
+  .tbl td{border:0;padding:3px 0;display:flex;gap:8px;font-size:13px}
+  .tbl td[data-l]::before{content:attr(data-l);color:var(--muted);min-width:110px}
+  .tbl td.c-who{padding-bottom:6px}
+  .abs-row{grid-template-columns:1fr;gap:8px}
+  .admin-grid{grid-template-columns:1fr}
+  .form-grid{grid-template-columns:1fr}
+  .lead-gd{grid-template-columns:1fr}
+  .grid2{grid-template-columns:1fr}
+  .minimap,.hint{display:none}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+@media print{
+  :root:root:root{--bg:#fff;--surface:#fff;--surface-2:#fff;--surface-3:#f1f4f8;--text:#111;--muted:#444;--border:#ccd3dc;--line:#8a99ad;--shadow:none;color-scheme:light}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body.printing-dir .app,body.printing-dir .drawer,body.printing-dir .overlay,body.printing-dir .toasts{display:none!important}
+  body.printing-dir #print-area{display:block}
+  body.printing-tree .top,body.printing-tree .side,body.printing-tree .bottom-nav,body.printing-tree .st-tools,body.printing-tree .zoombar,body.printing-tree .minimap,body.printing-tree .hint,body.printing-tree .drawer,body.printing-tree .overlay,body.printing-tree .toasts,body.printing-tree .sum-upd{display:none!important}
+  body.printing-tree .app,body.printing-tree .body{display:block;height:auto}
+  body.printing-tree main{overflow:visible}
+  body.printing-tree .viewport{overflow:visible;background:none;height:auto}
+  body.printing-tree .canvas{position:relative}
+  body.printing-tree .print-only{display:block}
+  body.printing-tree .st-head{border:0;padding:0 0 8px}
+  #print-area{font:12px/1.4 Inter,Arial,sans-serif;color:#111}
+  .pr-head{display:flex;align-items:center;gap:14px;border-bottom:2px solid #0B3B6F;padding-bottom:10px;margin-bottom:12px}
+  .pr-head h1{margin:0;font-size:18px}
+  .pr-head .pr-date{margin-left:auto;text-align:right;color:#555;font-size:11px}
+  #print-area table{width:100%;border-collapse:collapse}
+  #print-area th,#print-area td{border-bottom:1px solid #d5dbe3;padding:5px 6px;text-align:left;vertical-align:top}
+  #print-area th{font-size:10.5px;color:#555;text-transform:uppercase;letter-spacing:.03em}
+  #print-area tr.grp td{background:#eef2f7;font-weight:700;color:#0B3B6F}
+  #print-area tr{break-inside:avoid}
+  .pr-foot{margin-top:12px;font-size:10px;color:#777}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <a class="brand" href="#/structure" aria-label="Органиграмма АНПЗ">
+      <span class="logo" aria-hidden="true"><span>АНПЗ</span></span>
+      <span class="brand-txt"><b data-i18n="appTitle"></b><small data-i18n="companyFull"></small></span>
+    </a>
+    <div class="search" id="search">
+      <div class="search-box">
+        <svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="q" type="search" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="q-results" data-i18n-ph="searchPh" data-i18n-aria="searchPh">
+        <kbd>Ctrl K</kbd>
+      </div>
+      <div id="q-results" class="q-results" role="listbox" hidden></div>
+    </div>
+    <div class="top-actions">
+      <div class="seg" role="group" aria-label="Язык / Тіл">
+        <button data-lang="ru" aria-pressed="true">RU</button>
+        <button data-lang="kz" aria-pressed="false">KZ</button>
+      </div>
+      <button class="icon-btn" id="theme-btn" data-i18n-aria="theme"></button>
+      <div class="user">
+        <button class="user-btn" id="user-btn" aria-haspopup="true" aria-expanded="false"></button>
+        <div class="menu" id="user-menu" hidden></div>
+      </div>
+    </div>
+  </header>
+  <div class="body">
+    <aside class="side">
+      <nav id="side-nav" aria-label="Навигация"></nav>
+      <div class="side-foot" id="side-foot"></div>
+    </aside>
+    <main id="main" tabindex="-1"><div id="view"></div></main>
+  </div>
+  <nav class="bottom-nav" id="bottom-nav" aria-label="Навигация"></nav>
+</div>
+<div class="overlay" id="overlay"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="dr-title" aria-hidden="true"><div class="dr-scroll" id="dr-scroll"></div></aside>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<div id="print-area"></div>
+
+<script>
+(() => {
+'use strict';
+
+/* =========================================================
+   Utilities
+   ========================================================= */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('anpz-org.' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('anpz-org.' + k, JSON.stringify(v)); } catch (e) {} }
+};
+const dayMs = 864e5;
+const startOfDay = d => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
+const TODAY = startOfDay(new Date());
+const addDays = (d, n) => new Date(d.getTime() + n * dayMs);
+const pad = n => String(n).padStart(2, '0');
+
+/* =========================================================
+   Icons
+   ========================================================= */
+const P = {
+  search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  tree:'<rect x="9" y="3" width="6" height="5" rx="1"/><rect x="3" y="16" width="6" height="5" rx="1"/><rect x="15" y="16" width="6" height="5" rx="1"/><path d="M12 8v4M6 16v-2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2"/>',
+  list:'<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
+  users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+  book:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5M9 7h7M9 11h5"/>',
+  briefcase:'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2M2 13h20"/>',
+  calx:'<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M10 14l4 4M14 14l-4 4"/>',
+  sliders:'<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>',
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>',
+  moon:'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',
+  monitor:'<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  minus:'<path d="M5 12h14"/>',
+  fit:'<path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/>',
+  phone:'<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/>',
+  hash:'<path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18"/>',
+  mobile:'<rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/>',
+  mail:'<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/>',
+  copy:'<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+  link:'<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+  x:'<path d="M18 6 6 18M6 6l12 12"/>',
+  chev:'<path d="m6 9 6 6 6-6"/>',
+  chevR:'<path d="m9 18 6-6-6-6"/>',
+  chevL:'<path d="m15 18-6-6 6-6"/>',
+  up:'<path d="m18 15-6-6-6 6"/>',
+  building:'<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M12 6h.01M16 6h.01M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01"/>',
+  pin:'<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/>',
+  printer:'<path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>',
+  download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>',
+  alert:'<path d="m10.29 3.86-8.47 14.14A2 2 0 0 0 3.53 21h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/>',
+  refresh:'<path d="M21 12a9 9 0 1 1-2.64-6.36L21 8"/><path d="M21 3v5h-5"/>',
+  plane:'<path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>',
+  cross:'<path d="M12 5v14M5 12h14" stroke-width="3.2"/>',
+  cap:'<path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>',
+  dot:'<circle cx="12" cy="12" r="5" fill="currentColor" stroke="none"/>',
+  dash:'<path d="M6 12h12" stroke-width="3"/>',
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  check:'<path d="M20 6 9 17l-5-5"/>',
+  expand:'<path d="m7 15 5 5 5-5M7 9l5-5 5 5"/>',
+  collapse:'<path d="m7 20 5-5 5 5M7 4l5 5 5-5"/>',
+  target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 1v3M12 20v3M1 12h3M20 12h3"/>',
+  lock:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+  eyeoff:'<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M1 1l22 22"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  camera:'<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>',
+  trash:'<path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>',
+  file:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>'
+};
+const ic = (n, s = 18, extra = '') => `<svg class="ic" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ${extra}>${P[n] || ''}</svg>`;
+
+/* =========================================================
+   i18n
+   ========================================================= */
+const I = {
+  ru: {
+    appTitle:'Органиграмма', companyFull:'ТОО «Атырауский НПЗ»',
+    searchPh:'Поиск: ФИО, должность, подразделение, номер…',
+    nav_structure:'Структура', nav_leaders:'Руководство', nav_directory:'Справочник', nav_absent:'Кто отсутствует сегодня', nav_admin:'Админка',
+    navs_structure:'Структура', navs_leaders:'Руководство', navs_directory:'Справочник', navs_absent:'Отсутствуют', navs_admin:'Админка',
+    today:'Сегодня', updatedAt:'Данные актуальны на', modeTree:'Подразделения', modeList:'Список', modePeople:'Сотрудники',
+    peopleChart:'Оргчарт сотрудников', scope:'Подразделение', deputyRole:'Заместитель руководителя',
+    uploadPhoto:'Загрузить фото', changePhoto:'Заменить фото', removePhoto:'Удалить фото', photoSaved:'Фото загружено', photoRemoved:'Фото удалено',
+    photoHint:'Фото загружает HR-администратор (роль меняется в меню профиля).', placeholderNote:'Сейчас показана иллюстрация-заглушка — загрузите фото сотрудника.',
+    photosTitle:'Фотографии сотрудников', photosText:'Загрузите фото в карточке сотрудника или пакетом. Имя файла: внутренний номер (2345.jpg), логин e-mail (ivanov.i.jpg) или Фамилия_Имя (Иванов_Игорь.jpg). Фото обрезается до квадрата и сжимается.',
+    photosStat:'Загружено фото', bulkUpload:'Загрузить пакетом', clearPhotos:'Удалить все загруженные', bulkDone:'Сопоставлено фото', unmatched:'не сопоставлено', clearConfirm:'Удалить все загруженные фото?',
+    auditPhoto:'Загрузка фото', auditPhotoDel:'Удаление фото', storageFull:'Хранилище браузера переполнено — фото не сохранено', photoSession:'Фото загружено (хранилище браузера недоступно — сохранится до перезагрузки)',
+    zoomIn:'Увеличить', zoomOut:'Уменьшить', fit:'Вписать в экран', expandAll:'Раскрыть всё', collapseAll:'Свернуть',
+    pdf:'PDF / печать схемы', dragHint:'Перетаскивайте полотно, колесо мыши — масштаб',
+    head:'Руководитель', deputies:'Заместители', subunits:'Подчинённые подразделения', staff:'Сотрудники',
+    reception:'Приёмная / общий телефон', location:'Расположение', chain:'Цепочка руководства', statusSummary:'Сводка статусов',
+    position:'Должность', department:'Подразделение', manager:'Непосредственный руководитель', workPhone:'Рабочий телефон',
+    internal:'Внутренний номер', mobile:'Мобильный рабочий', email:'E-mail', office:'Кабинет / корпус', status:'Статус',
+    period:'Период отсутствия', substitute:'Замещает', substituteFull:'Замещающее лицо',
+    copyPhone:'Скопировать телефон', copyInternal:'Скопировать вн. номер', writeEmail:'Написать', call:'Позвонить',
+    showInTree:'Показать в структуре', copyLink:'Скопировать ссылку', copied:'Скопировано', linkCopied:'Ссылка скопирована',
+    subAbsent:'Замещающий также отсутствует. Обращайтесь к вышестоящему руководителю:',
+    actingFor:'Замещает отсутствующих', intShort:'вн.', until:'до', from:'с', to:'по', close:'Закрыть',
+    privacy:'Персональные данные (ИИН, дата рождения, личные контакты, причина отсутствия) не отображаются.',
+    dirSub:'Все сотрудники завода: поиск, фильтры, экспорт и печать', dirSearchPh:'ФИО, должность, номер, e-mail…',
+    allDepts:'Все подразделения', allCats:'Все категории', cat_L:'Руководители', cat_S:'Специалисты', cat_W:'Рабочие',
+    leadersOnly:'Только руководители', reset:'Сбросить', exportXlsx:'Экспорт в Excel', print:'Печать',
+    includeStatuses:'Статусы в экспорте', found:'Найдено', nothing:'Ничего не найдено', nothingHint:'Измените запрос или сбросьте фильтры',
+    col_fio:'ФИО', col_pos:'Должность', col_dept:'Подразделение', col_work:'Рабочий телефон', col_int:'Вн. номер', col_email:'E-mail', col_office:'Кабинет', col_status:'Статус',
+    leadersSub:'Генеральный директор и заместители по направлениям', receptionShort:'Приёмная', openCard:'Карточка',
+    absentSub:'Отпуска, больничные, командировки и обучение — с замещающими', allPresent:'Сегодня все на месте',
+    adminTitle:'Административная панель', adminSub:'Синхронизация, ручные правки, справочники и аудит',
+    noAccess:'Нет доступа', noAccessText:'Раздел доступен ролям «HR-администратор» и «Системный администратор». Сменить роль для демо можно в меню профиля.',
+    syncTitle:'Синхронизация с источниками', syncText:'1С:ЗУП / SAP HCM — структура и статусы, Active Directory — контакты',
+    lastSync:'Последняя синхронизация', schedule:'Расписание', scheduleVal:'Статусы — каждые 15 мин · Структура — ежедневно в 03:00',
+    runSync:'Запустить синхронизацию', syncing:'Синхронизация…', syncDone:'Синхронизация завершена', syncLog:'Журнал синхронизации',
+    lg_time:'Время', lg_source:'Источник', lg_result:'Результат', lg_changes:'Изменений', lg_errors:'Ошибки', ok:'Успешно', warn:'Предупреждение',
+    manual:'Ручная корректировка', manualText:'Дополнение данных, отсутствующих в HR-системе. Поля помечаются «изменено вручную».',
+    employee:'Сотрудник', autoSub:'— автоматически (из HR-системы) —', hideEmp:'Скрыть из публичного просмотра',
+    save:'Сохранить', saved:'Изменения сохранены', revert:'Отменить правку', manualMark:'изменено вручную', manualList:'Ручные правки',
+    noManual:'Ручных правок пока нет', statusTypes:'Справочник статусов', st_code:'Коды 1С/SAP', st_export:'В экспорте',
+    audit:'Журнал аудита', au_user:'Пользователь', au_action:'Действие', au_obj:'Объект', yes:'да', no:'нет',
+    roleDemo:'Роль (демо)', themeL:'Тема', th_auto:'Как в системе', th_light:'Светлая', th_dark:'Тёмная', demoUser:'Демо-пользователь',
+    role_employee:'Сотрудник', role_leader:'Руководитель', role_hr:'HR-администратор', role_sys:'Системный администратор',
+    demoNote:'Прототип на моковых данных', theme:'Сменить тему', searchAll:'Все результаты в справочнике', keysHint:'↑↓ выбор · Enter открыть · Esc закрыть',
+    printTitle:'Телефонный справочник', formed:'Сформировано', forOfficial:'Для служебного пользования', wholePlant:'Все подразделения завода',
+    exportDone:'Файл сформирован', notFound:'Сотрудник не найден или скрыт', groupEmp:'Сотрудники', groupDept:'Подразделения',
+    showMore:'Показать в справочнике', persons:'чел.', prev:'Назад', next:'Вперёд', of:'из', auditSync:'Ручной запуск синхронизации', auditEdit:'Ручная корректировка', auditRevert:'Отмена ручной правки',
+    scheduledSync:'Плановая', structSync:'Структура и сотрудники', statusSync:'Статусы отсутствий', adSync:'Контакты AD'
+  },
+  kz: {
+    appTitle:'Органиграмма', companyFull:'«Атырау МӨЗ» ЖШС',
+    searchPh:'Іздеу: аты-жөні, лауазымы, бөлімше, нөмір…',
+    nav_structure:'Құрылым', nav_leaders:'Басшылық', nav_directory:'Анықтамалық', nav_absent:'Бүгін кім жоқ', nav_admin:'Әкімшілік',
+    navs_structure:'Құрылым', navs_leaders:'Басшылық', navs_directory:'Анықтамалық', navs_absent:'Жоқтар', navs_admin:'Әкімшілік',
+    today:'Бүгін', updatedAt:'Деректер өзекті:', modeTree:'Бөлімшелер', modeList:'Тізім', modePeople:'Қызметкерлер',
+    peopleChart:'Қызметкерлер оргчарты', scope:'Бөлімше', deputyRole:'Басшының орынбасары',
+    uploadPhoto:'Фото жүктеу', changePhoto:'Фотоны ауыстыру', removePhoto:'Фотоны жою', photoSaved:'Фото жүктелді', photoRemoved:'Фото жойылды',
+    photoHint:'Фотоны HR-әкімші жүктейді (рөл профиль мәзірінде ауысады).', placeholderNote:'Қазір иллюстрация-бейне көрсетілген — қызметкердің фотосын жүктеңіз.',
+    photosTitle:'Қызметкерлердің фотолары', photosText:'Фотоны қызметкер карточкасында немесе топтамамен жүктеңіз. Файл атауы: ішкі нөмір (2345.jpg), e-mail логині (ivanov.i.jpg) немесе Тегі_Аты (Иванов_Игорь.jpg).',
+    photosStat:'Жүктелген фото', bulkUpload:'Топтамамен жүктеу', clearPhotos:'Жүктелгендердің бәрін жою', bulkDone:'Сәйкестендірілген фото', unmatched:'сәйкес келмеді', clearConfirm:'Жүктелген фотолардың бәрін жою керек пе?',
+    auditPhoto:'Фото жүктеу', auditPhotoDel:'Фотоны жою', storageFull:'Браузер қоймасы толы — фото сақталмады', photoSession:'Фото жүктелді (браузер қоймасы қолжетімсіз — бет жаңартылғанша сақталады)',
+    zoomIn:'Үлкейту', zoomOut:'Кішірейту', fit:'Экранға сыйдыру', expandAll:'Барлығын ашу', collapseAll:'Жию',
+    pdf:'PDF / сызбаны басып шығару', dragHint:'Кенепті сүйреңіз, тінтуір дөңгелегі — масштаб',
+    head:'Басшы', deputies:'Орынбасарлар', subunits:'Бағынышты бөлімшелер', staff:'Қызметкерлер',
+    reception:'Қабылдау бөлмесі / жалпы телефон', location:'Орналасуы', chain:'Басшылық тізбегі', statusSummary:'Мәртебелер жиынтығы',
+    position:'Лауазымы', department:'Бөлімше', manager:'Тікелей басшы', workPhone:'Жұмыс телефоны',
+    internal:'Ішкі нөмір', mobile:'Жұмыс ұялы телефоны', email:'E-mail', office:'Кабинет / корпус', status:'Мәртебе',
+    period:'Болмау кезеңі', substitute:'Алмастырады', substituteFull:'Алмастырушы',
+    copyPhone:'Телефонды көшіру', copyInternal:'Ішкі нөмірді көшіру', writeEmail:'Хат жазу', call:'Қоңырау шалу',
+    showInTree:'Құрылымда көрсету', copyLink:'Сілтемені көшіру', copied:'Көшірілді', linkCopied:'Сілтеме көшірілді',
+    subAbsent:'Алмастырушы да жоқ. Жоғары тұрған басшыға хабарласыңыз:',
+    actingFor:'Жоқ қызметкерлерді алмастырады', intShort:'ішкі', until:'дейін', from:'бастап', to:'дейін', close:'Жабу',
+    privacy:'Дербес деректер (ЖСН, туған күні, жеке байланыстар, болмау себебі) көрсетілмейді.',
+    dirSub:'Зауыттың барлық қызметкерлері: іздеу, сүзгілер, экспорт және басып шығару', dirSearchPh:'Аты-жөні, лауазымы, нөмір, e-mail…',
+    allDepts:'Барлық бөлімшелер', allCats:'Барлық санаттар', cat_L:'Басшылар', cat_S:'Мамандар', cat_W:'Жұмысшылар',
+    leadersOnly:'Тек басшылар', reset:'Тазарту', exportXlsx:'Excel-ге экспорт', print:'Басып шығару',
+    includeStatuses:'Экспортта мәртебелер', found:'Табылды', nothing:'Ештеңе табылмады', nothingHint:'Сұрауды өзгертіңіз немесе сүзгілерді тазартыңыз',
+    col_fio:'Аты-жөні', col_pos:'Лауазымы', col_dept:'Бөлімше', col_work:'Жұмыс телефоны', col_int:'Ішкі нөмір', col_email:'E-mail', col_office:'Кабинет', col_status:'Мәртебе',
+    leadersSub:'Бас директор және бағыттар бойынша орынбасарлар', receptionShort:'Қабылдау бөлмесі', openCard:'Карточка',
+    absentSub:'Демалыс, науқас, іссапар және оқу — алмастырушылармен', allPresent:'Бүгін бәрі орнында',
+    adminTitle:'Әкімшілік панель', adminSub:'Синхрондау, қолмен түзету, анықтамалықтар және аудит',
+    noAccess:'Қол жеткізу жоқ', noAccessText:'Бөлім «HR-әкімші» және «Жүйелік әкімші» рөлдеріне қолжетімді. Демо үшін рөлді профиль мәзірінде ауыстыруға болады.',
+    syncTitle:'Дереккөздермен синхрондау', syncText:'1С:ЗУП / SAP HCM — құрылым мен мәртебелер, Active Directory — байланыстар',
+    lastSync:'Соңғы синхрондау', schedule:'Кесте', scheduleVal:'Мәртебелер — әр 15 мин · Құрылым — күн сайын 03:00',
+    runSync:'Синхрондауды іске қосу', syncing:'Синхрондалуда…', syncDone:'Синхрондау аяқталды', syncLog:'Синхрондау журналы',
+    lg_time:'Уақыты', lg_source:'Дереккөз', lg_result:'Нәтиже', lg_changes:'Өзгерістер', lg_errors:'Қателер', ok:'Сәтті', warn:'Ескерту',
+    manual:'Қолмен түзету', manualText:'HR-жүйеде жоқ деректерді толықтыру. Өрістер «қолмен өзгертілді» деп белгіленеді.',
+    employee:'Қызметкер', autoSub:'— автоматты түрде (HR-жүйеден) —', hideEmp:'Жария көріністен жасыру',
+    save:'Сақтау', saved:'Өзгерістер сақталды', revert:'Түзетуді болдырмау', manualMark:'қолмен өзгертілді', manualList:'Қолмен түзетулер',
+    noManual:'Әзірге қолмен түзетулер жоқ', statusTypes:'Мәртебелер анықтамалығы', st_code:'1С/SAP кодтары', st_export:'Экспортта',
+    audit:'Аудит журналы', au_user:'Пайдаланушы', au_action:'Әрекет', au_obj:'Нысан', yes:'иә', no:'жоқ',
+    roleDemo:'Рөл (демо)', themeL:'Тақырып', th_auto:'Жүйедегідей', th_light:'Жарық', th_dark:'Қараңғы', demoUser:'Демо-пайдаланушы',
+    role_employee:'Қызметкер', role_leader:'Басшы', role_hr:'HR-әкімші', role_sys:'Жүйелік әкімші',
+    demoNote:'Жалған деректердегі прототип', theme:'Тақырыпты ауыстыру', searchAll:'Анықтамалықтағы барлық нәтижелер', keysHint:'↑↓ таңдау · Enter ашу · Esc жабу',
+    printTitle:'Телефон анықтамалығы', formed:'Құрылған күні', forOfficial:'Қызметтік пайдалану үшін', wholePlant:'Зауыттың барлық бөлімшелері',
+    exportDone:'Файл жасалды', notFound:'Қызметкер табылмады немесе жасырылған', groupEmp:'Қызметкерлер', groupDept:'Бөлімшелер',
+    showMore:'Анықтамалықта көрсету', persons:'адам', prev:'Артқа', next:'Алға', of:'/', auditSync:'Синхрондауды қолмен іске қосу', auditEdit:'Қолмен түзету', auditRevert:'Қолмен түзетуді болдырмау',
+    scheduledSync:'Жоспарлы', structSync:'Құрылым және қызметкерлер', statusSync:'Болмау мәртебелері', adSync:'AD байланыстары'
+  }
+};
+const MONTHS = {
+  ru:['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'],
+  kz:['қаңтар','ақпан','наурыз','сәуір','мамыр','маусым','шілде','тамыз','қыркүйек','қазан','қараша','желтоқсан']
+};
+
+/* =========================================================
+   State
+   ========================================================= */
+const state = {
+  lang: store.get('lang', 'ru'),
+  theme: store.get('theme', 'auto'),
+  role: store.get('role', 'employee'),
+  mode: store.get('mode2', null),
+  pDept: 'd0', pexp: null, activeEmp: null,
+  expanded: new Set(['d0','d1','d2','d3','d4','d5','d6']),
+  view: null, renderedView: null,
+  activeDept: 'd0',
+  tf: null,
+  dir: { q:'', dept:'', st:new Set(), cat:'', leaders:false, sort:'name', asc:true, page:1, withStatus:false },
+  absDept: '',
+  lastSync: null, syncLog: [], audit: store.get('audit', null)
+};
+const t = k => (I[state.lang] && I[state.lang][k]) ?? I.ru[k] ?? k;
+const L = () => state.lang === 'kz' ? 1 : 0;
+
+const fmtD = d => `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`;
+const fmtT = d => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const fmtDT = d => `${fmtD(d)} ${fmtT(d)}`;
+const fmtLong = d => state.lang === 'kz' ? `${d.getFullYear()} жылғы ${d.getDate()} ${MONTHS.kz[d.getMonth()]}` : `${d.getDate()} ${MONTHS.ru[d.getMonth()]} ${d.getFullYear()}`;
+const plural = (n, f) => { const a = n % 100, b = n % 10; if (a > 10 && a < 20) return f[2]; if (b === 1) return f[0]; if (b > 1 && b < 5) return f[1]; return f[2]; };
+const empCount = n => state.lang === 'kz' ? `${n} қызметкер` : `${n} ${plural(n, ['сотрудник','сотрудника','сотрудников'])}`;
+
+/* =========================================================
+   Reference data
+   ========================================================= */
+const STATUSES = [
+  { code:'work',     ru:'На работе',      kz:'Жұмыста',   sru:'на месте',       skz:'орнында',    icon:'dot',   hr:['Я','РВ','С'], exp:true },
+  { code:'vacation', ru:'В отпуске',      kz:'Демалыста', sru:'в отпуске',      skz:'демалыста',  icon:'sun',   hr:['ОТ','ОД','У','ДО'], exp:false },
+  { code:'sick',     ru:'На больничном',  kz:'Науқас',    sru:'на больничном',  skz:'науқас',     icon:'cross', hr:['Б','Т'], exp:false },
+  { code:'trip',     ru:'В командировке', kz:'Іссапарда', sru:'в командировке', skz:'іссапарда',  icon:'plane', hr:['К'], exp:false },
+  { code:'training', ru:'Обучение',       kz:'Оқуда',     sru:'на обучении',    skz:'оқуда',      icon:'cap',   hr:['ПК','ПМ'], exp:false },
+  { code:'other',    ru:'Отсутствует',    kz:'Жоқ',       sru:'прочее',         skz:'басқа',      icon:'dash',  hr:['НН','Г','НВ'], exp:false }
+];
+const ST = Object.fromEntries(STATUSES.map(s => [s.code, s]));
+const sName = code => ST[code][state.lang === 'kz' ? 'kz' : 'ru'];
+const sSum = code => ST[code][state.lang === 'kz' ? 'skz' : 'sru'];
+
+const POS = {
+  gd:['Генеральный директор','Бас директор','L'],
+  assistant:['Помощник генерального директора','Бас директордың көмекшісі','S'],
+  dep_prod:['Заместитель генерального директора по производству','Бас директордың өндіріс жөніндегі орынбасары','L'],
+  chief_eng:['Главный инженер — первый заместитель генерального директора','Бас инженер — бас директордың бірінші орынбасары','L'],
+  dep_fin:['Заместитель генерального директора по экономике и финансам','Бас директордың экономика және қаржы жөніндегі орынбасары','L'],
+  dep_hr:['Заместитель генерального директора по персоналу','Бас директордың персонал жөніндегі орынбасары','L'],
+  dep_hse:['Заместитель генерального директора по ПБ, ОТ и ООС','Бас директордың ӨҚ, ЕҚ және ҚОҚ жөніндегі орынбасары','L'],
+  head_uit:['Начальник управления информационных технологий','Ақпараттық технологиялар басқармасының бастығы','L'],
+  deputy_uit:['Заместитель начальника управления ИТ','АТ басқармасы бастығының орынбасары','L'],
+  infosec:['Специалист по информационной безопасности','Ақпараттық қауіпсіздік жөніндегі маман','S'],
+  it_pm:['Руководитель ИТ-проектов','АТ жобаларының жетекшісі','S'],
+  net_eng:['Сетевой инженер','Желі инженері','S'],
+  support:['Специалист технической поддержки','Техникалық қолдау маманы','S'],
+  sap_spec:['Специалист SAP','SAP маманы','S'],
+  head_service:['Начальник службы','Қызмет бастығы','L'],
+  head_shop:['Начальник цеха','Цех бастығы','L'],
+  head_dept:['Начальник отдела','Бөлім бастығы','L'],
+  head_lab:['Начальник лаборатории','Зертхана бастығы','L'],
+  chief_acc:['Главный бухгалтер','Бас бухгалтер','L'],
+  chief_mech:['Главный механик','Бас механик','L'],
+  chief_energ:['Главный энергетик','Бас энергетик','L'],
+  head_center:['Директор учебного центра','Оқу орталығының директоры','L'],
+  head_gss:['Командир газоспасательной службы','Газқұтқару қызметінің командирі','L'],
+  deputy_head:['Заместитель начальника','Бастықтың орынбасары','L'],
+  lead_eng:['Ведущий инженер','Жетекші инженер','S'],
+  eng_tech:['Инженер-технолог','Инженер-технолог','S'],
+  eng:['Инженер','Инженер','S'],
+  chief_spec:['Главный специалист','Бас маман','S'],
+  lead_spec:['Ведущий специалист','Жетекші маман','S'],
+  economist:['Экономист','Экономист','S'],
+  accountant:['Бухгалтер','Бухгалтер','S'],
+  operator:['Оператор технологических установок','Технологиялық қондырғылар операторы','W'],
+  shift_master:['Мастер смены','Ауысым шебері','S'],
+  lab:['Лаборант химического анализа','Химиялық талдау зертханашысы','W'],
+  secretary:['Секретарь-референт','Хатшы-референт','S'],
+  hse_spec:['Специалист по охране труда','Еңбекті қорғау жөніндегі маман','S'],
+  ecologist:['Инженер-эколог','Инженер-эколог','S'],
+  sysadmin:['Системный администратор','Жүйелік әкімші','S'],
+  dev1c:['Программист 1С','1С бағдарламашысы','S'],
+  analyst:['Бизнес-аналитик','Бизнес-талдаушы','S'],
+  mechanic:['Механик','Механик','S'],
+  repairman:['Слесарь-ремонтник','Слесарь-жөндеуші','W'],
+  electrician:['Электромонтёр','Электр монтері','W'],
+  rescuer:['Газоспасатель','Газқұтқарушы','W'],
+  hr_spec:['Специалист по персоналу','Персонал жөніндегі маман','S'],
+  teacher:['Преподаватель','Оқытушы','S'],
+  commodity:['Оператор товарный','Тауар операторы','W']
+};
+const FEM_BIAS = { secretary:.92, lab:.75, accountant:.8, economist:.65, hr_spec:.75, chief_spec:.5, lead_spec:.6, teacher:.6, assistant:.5, ecologist:.6, analyst:.5 };
+const MALE_ONLY = new Set(['operator','repairman','electrician','rescuer','commodity','shift_master','mechanic','gd']);
+
+const IVANOV = { last:'Иванов', first:'Игорь', mid:'Игоревич', g:'m', internal:'2345' };
+const IVANOVA = { last:'Иванова', first:'Елена', mid:'Петровна', g:'f' };
+
+const DEPT_SPEC = [
+  {id:'d0',  p:null, ru:'Атырауский нефтеперерабатывающий завод', kz:'Атырау мұнай өңдеу зауыты', sh:'АНПЗ', c:'#0B3B6F', loc:'АБК-1, 4 этаж', room:4, head:'gd', staff:['assistant','secretary']},
+  {id:'d1',  p:'d0', ru:'Дирекция по производству', kz:'Өндіріс дирекциясы', sh:'ДП', c:'#1E88E5', loc:'АБК-1, 3 этаж', room:3, head:'dep_prod', staff:['secretary','chief_spec']},
+  {id:'d11', p:'d1', ru:'Производственная служба', kz:'Өндірістік қызмет', sh:'ПС', loc:'АБК-2, 2 этаж', room:2, head:'head_service', staff:['deputy_head','lead_eng','eng_tech']},
+  {id:'d111',p:'d11',ru:'Цех №1 (ЭЛОУ-АВТ)', kz:'№1 цех (ЭЛОУ-АВТ)', sh:'Цех №1', loc:'Цех №1, операторная', head:'head_shop', staff:['deputy_head','shift_master','operator','operator','eng_tech']},
+  {id:'d112',p:'d11',ru:'Цех №2 (Каталитический риформинг)', kz:'№2 цех (Каталитикалық риформинг)', sh:'Цех №2', loc:'Цех №2, операторная', head:'head_shop', staff:['shift_master','operator','operator','eng_tech']},
+  {id:'d113',p:'d11',ru:'Цех №3 (Глубокая переработка нефти)', kz:'№3 цех (Мұнайды терең өңдеу)', sh:'Цех №3', loc:'Цех №3 (КГПН), операторная', head:'head_shop', staff:['deputy_head','shift_master','operator','operator','lead_eng']},
+  {id:'d12', p:'d1', ru:'Товарно-сырьевой цех', kz:'Тауар-шикізат цехы', sh:'ТСЦ', loc:'Товарный парк, здание ТСЦ', head:'head_shop', staff:['shift_master','commodity','commodity']},
+  {id:'d13', p:'d1', ru:'Центральная заводская лаборатория', kz:'Орталық зауыттық зертхана', sh:'ЦЗЛ', loc:'Корпус ЦЗЛ, 1 этаж', room:1, head:'head_lab', staff:['lead_eng','lab','lab','lab']},
+  {id:'d2',  p:'d0', ru:'Техническая дирекция', kz:'Техникалық дирекция', sh:'ТД', c:'#0F9D8A', loc:'АБК-1, 3 этаж', room:3, head:'chief_eng', staff:['secretary']},
+  {id:'d21', p:'d2', ru:'Технический отдел', kz:'Техникалық бөлім', sh:'ТО', loc:'АБК-1, 2 этаж', room:2, head:'head_dept', staff:[{p:'lead_eng',o:IVANOV},'eng','eng']},
+  {id:'d22', p:'d2', ru:'Отдел главного механика', kz:'Бас механик бөлімі', sh:'ОГМ', loc:'АБК-2, 1 этаж', room:1, head:'chief_mech', staff:['mechanic','repairman','repairman']},
+  {id:'d23', p:'d2', ru:'Отдел главного энергетика', kz:'Бас энергетик бөлімі', sh:'ОГЭ', loc:'АБК-2, 1 этаж', room:1, head:'chief_energ', staff:['lead_eng','electrician','electrician']},
+  {id:'d3',  p:'d0', ru:'Дирекция по экономике и финансам', kz:'Экономика және қаржы дирекциясы', sh:'ДЭФ', c:'#7C5CD6', loc:'АБК-1, 4 этаж', room:4, head:'dep_fin', staff:['secretary']},
+  {id:'d31', p:'d3', ru:'Планово-экономический отдел', kz:'Жоспарлау-экономикалық бөлім', sh:'ПЭО', loc:'АБК-1, 4 этаж', room:4, head:'head_dept', staff:['chief_spec',{p:'economist',o:IVANOVA},'economist']},
+  {id:'d32', p:'d3', ru:'Бухгалтерия', kz:'Бухгалтерия', sh:'БУХ', loc:'АБК-1, 4 этаж', room:4, head:'chief_acc', staff:['lead_spec','accountant','accountant']},
+  {id:'d4',  p:'d0', ru:'Дирекция по персоналу', kz:'Персонал дирекциясы', sh:'ДПер', c:'#C2185B', loc:'АБК-1, 2 этаж', room:2, head:'dep_hr', staff:['secretary']},
+  {id:'d41', p:'d4', ru:'Служба управления персоналом', kz:'Персоналды басқару қызметі', sh:'СУП', loc:'АБК-1, 2 этаж', room:2, head:'head_service', staff:['chief_spec','hr_spec','hr_spec']},
+  {id:'d42', p:'d4', ru:'Учебный центр', kz:'Оқу орталығы', sh:'УЦ', loc:'Учебный корпус, 2 этаж', room:2, head:'head_center', staff:['teacher','teacher']},
+  {id:'d5',  p:'d0', ru:'Дирекция ПБ, ОТ и ООС', kz:'ӨҚ, ЕҚ және ҚОҚ дирекциясы', sh:'ДПБ', c:'#5E8C31', loc:'АБК-1, 3 этаж', room:3, head:'dep_hse', staff:['secretary']},
+  {id:'d51', p:'d5', ru:'Служба охраны труда и промышленной безопасности', kz:'Еңбекті қорғау және өнеркәсіптік қауіпсіздік қызметі', sh:'СОТиПБ', loc:'АБК-2, 3 этаж', room:3, head:'head_service', staff:['hse_spec','hse_spec','lead_eng']},
+  {id:'d52', p:'d5', ru:'Газоспасательная служба', kz:'Газқұтқару қызметі', sh:'ГСС', loc:'Здание ГСС, дежурная часть', head:'head_gss', staff:['rescuer','rescuer','rescuer']},
+  {id:'d53', p:'d5', ru:'Отдел охраны окружающей среды', kz:'Қоршаған ортаны қорғау бөлімі', sh:'ООС', loc:'АБК-2, 3 этаж', room:3, head:'head_dept', staff:['ecologist','ecologist']},
+  {id:'d6',  p:'d0', ru:'Управление информационных технологий', kz:'Ақпараттық технологиялар басқармасы', sh:'УИТ', c:'#3949AB', loc:'АБК-1, 5 этаж', room:5, head:'head_uit', staff:['deputy_uit','infosec','it_pm','secretary']},
+  {id:'d61', p:'d6', ru:'Отдел ИТ-инфраструктуры', kz:'АТ инфрақұрылымы бөлімі', sh:'ОИТИ', loc:'АБК-1, 5 этаж', room:5, head:'head_dept', staff:['sysadmin','sysadmin','net_eng','support']},
+  {id:'d62', p:'d6', ru:'Отдел корпоративных информационных систем', kz:'Корпоративтік ақпараттық жүйелер бөлімі', sh:'ОКИС', loc:'АБК-1, 5 этаж', room:5, head:'head_dept', staff:['deputy_head','dev1c','dev1c','sap_spec','analyst']}
+];
+
+const KZ_M = ['Ерлан','Нурлан','Асхат','Бауыржан','Данияр','Мурат','Ержан','Тимур','Арман','Серик','Айдос','Канат','Руслан','Талгат','Азамат','Берик','Марат','Нуржан','Самат','Ербол','Аскар','Дастан','Жандос','Ерасыл'];
+const KZ_F = ['Айгуль','Динара','Гульнара','Асель','Жанар','Сауле','Алия','Мадина','Айжан','Камила','Лаура','Гульмира','Индира','Назира','Акмарал','Жанна','Ботагоз','Арайлым'];
+const KZ_SUR = ['Ахметов','Жумабаев','Нургалиев','Касымов','Есенов','Тулегенов','Байжанов','Абдрахманов','Иманбаев','Оспанов','Мукашев','Сарсенбаев','Утегенов','Калиев','Ермеков','Жаксыбеков','Кенжебаев','Исмагулов','Бекмухамбетов','Тажибаев','Аманжолов','Досмухамбетов','Шарипов','Курмангалиев','Избасаров','Тлеуов','Мусин','Жанибеков'];
+const KZ_PAT = ['Серик','Марат','Канат','Болат','Ермек','Талгат','Нурлан','Бакыт','Кайрат','Жанат','Темирбек','Жаксылык'];
+const RU_M = ['Алексей','Сергей','Дмитрий','Андрей','Виктор','Николай','Павел','Олег','Михаил','Владимир','Евгений','Константин'];
+const RU_F = ['Елена','Ольга','Наталья','Татьяна','Ирина','Светлана','Марина','Анна','Юлия'];
+const RU_SUR = ['Петров','Смирнов','Кузнецов','Попов','Соколов','Морозов','Волков','Лебедев','Козлов','Новиков','Федоров','Ким','Пак','Цой','Шевченко'];
+const RU_PAT = [['Иванович','Ивановна'],['Петрович','Петровна'],['Сергеевич','Сергеевна'],['Александрович','Александровна'],['Викторович','Викторовна'],['Николаевич','Николаевна'],['Владимирович','Владимировна'],['Юрьевич','Юрьевна']];
+const isDeputy = e => !!e && /^deputy/.test(e.posKey);
+
+/* ---------- photos: uploaded (localStorage) or generated portrait placeholder ---------- */
+let PHOTOS = store.get('photos', {});
+const SKIN = ['#F2D3B8','#E9BF9A','#DDA67E','#C98F66','#F5DCC6'];
+const HAIR = ['#231D1B','#2F2522','#4A3426','#16130F','#6A4A33'];
+const PBG = ['#DCE6F3','#E1EDE4','#EAE3F2','#F2E8DA','#DDEBEE','#EFE2E6'];
+const SUIT_M = ['#1F3550','#2E3A47','#3A4859','#24324A','#4B5058'];
+const SUIT_F = ['#1F3550','#5A3A60','#2C4E52','#7A3D4A','#3A4859','#8A6A3A'];
+const TIES = ['#A23B3B','#1E5FA8','#2F6F4F','#7A4FA0','#B5872D'];
+const portraitCache = {};
+function portrait(e){
+  if (portraitCache[e.id]) return portraitCache[e.id];
+  const r = mulberry32(parseInt(e.id.slice(1), 10) * 7919 + 13), p = a => a[Math.floor(r() * a.length)];
+  const skin = p(SKIN), bg = p(PBG), f = e.g === 'f', coat = e.posKey === 'lab', worker = e.cat === 'W' && !coat;
+  let hair = p(HAIR); const grey = !f && e.cat === 'L' && r() < .3; if (grey) hair = '#8E8E8E';
+  const glasses = r() < (e.cat === 'L' ? .4 : .2);
+  const suit = coat ? '#EEF2F6' : worker ? (r() < .5 ? '#2C5A8C' : '#3B4A5C') : p(f ? SUIT_F : SUIT_M);
+  let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="${bg}"/>`;
+  if (f && !worker) s += `<path d="M27 46C25 22 37 13 50 13S75 22 73 46L76 80C66 86 34 86 24 80Z" fill="${hair}"/>`;
+  s += `<path d="M10 100C12 80 28 71 50 71S88 80 90 100Z" fill="${suit}"/>`;
+  s += `<path d="M43 57h14v15c0 4-14 4-14 0Z" fill="${skin}"/><path d="M43 61c4 3 10 3 14 0v-4H43Z" fill="#000" opacity=".08"/>`;
+  if (worker) s += `<path d="M14 93h72" stroke="#E6ECF2" stroke-width="4"/><path d="M41 71l9 8 9-8" fill="none" stroke="#E6ECF2" stroke-width="3"/>`;
+  else if (coat) s += `<path d="M40 71L50 86L60 71" fill="none" stroke="#C5CED8" stroke-width="2"/><path d="M50 86V100" stroke="#C5CED8" stroke-width="1.5"/>`;
+  else if (f) s += `<path d="M40 71Q50 84 60 71Z" fill="${skin}"/><path d="M42 73Q50 83 58 73" fill="none" stroke="#fff" stroke-width="1.6" opacity=".85"/>`;
+  else s += `<path d="M41 71L50 83L59 71Z" fill="#fff"/><path d="M48.3 75h3.4l1.6 15-3.3 4-3.3-4Z" fill="${p(TIES)}"/>`;
+  s += `<ellipse cx="33" cy="45" rx="3.5" ry="5" fill="${skin}"/><ellipse cx="67" cy="45" rx="3.5" ry="5" fill="${skin}"/>`;
+  s += `<ellipse cx="50" cy="42" rx="17" ry="20.5" fill="${skin}"/>`;
+  if (worker) s += `<path d="M30 37C30 22 40 15 50 15S70 22 70 37Z" fill="#F2A900"/><rect x="27" y="34" width="46" height="5.5" rx="2.7" fill="#D99500"/><path d="M50 16v18" stroke="#D99500" stroke-width="2"/>`;
+  else if (f) s += `<path d="M33 44C32 26 42 20 51 20S68 27 67 44C63 33 55 29 47 30 40 32 35 37 33 44Z" fill="${hair}"/>`;
+  else if (grey) s += `<path d="M33.5 44C31 33 33 27 37 25M66.5 44C69 33 67 27 63 25" stroke="${hair}" stroke-width="5" fill="none" stroke-linecap="round"/>`;
+  else s += `<path d="M33 41C31 25 41 19 51 19S69 25 67 41C64 32 58 29 50 29.5 43 29.5 37 33 33 41Z" fill="${hair}"/>`;
+  s += `<path d="M40 38.5q3-1.6 6 0M54 38.5q3-1.6 6 0" stroke="${f || worker ? '#3A2A22' : hair}" stroke-width="1.6" fill="none" stroke-linecap="round"/>`;
+  s += `<circle cx="43" cy="43.5" r="1.9" fill="#2A2A2A"/><circle cx="57" cy="43.5" r="1.9" fill="#2A2A2A"/>`;
+  s += `<path d="M49.5 45.5l-1.5 6h3" stroke="#000" stroke-opacity=".18" stroke-width="1.3" fill="none" stroke-linecap="round"/>`;
+  s += `<path d="M44.5 54.5q5.5 4 11 0" stroke="#9A4A3A" stroke-width="1.8" fill="none" stroke-linecap="round"/>`;
+  if (f) s += `<circle cx="38" cy="50" r="2.6" fill="#E88" opacity=".25"/><circle cx="62" cy="50" r="2.6" fill="#E88" opacity=".25"/>`;
+  if (glasses) s += `<g fill="none" stroke="#2B2B2B" stroke-width="1.4"><rect x="37" y="39.5" width="11" height="8" rx="3"/><rect x="52" y="39.5" width="11" height="8" rx="3"/><path d="M48 43h4"/></g>`;
+  s += '</svg>';
+  return (portraitCache[e.id] = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(s));
+}
+const photoSrc = e => PHOTOS[e.id] || portrait(e);
+// true = saved; false = quota exceeded; 'session' = storage unavailable, kept in memory until reload
+function savePhotos(){
+  try { localStorage.setItem('anpz-org.photos', JSON.stringify(PHOTOS)); return true; }
+  catch (err){ return /quota/i.test(err.name + err.message) ? false : 'session'; }
+}
+function resizeImage(file, size = 220){
+  return new Promise((res, rej) => {
+    if (!/^image\//.test(file.type)) return rej(new Error(file.name));
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = () => {
+      const s = Math.min(img.width, img.height), sx = (img.width - s) / 2, sy = (img.height - s) * .3;
+      const c = document.createElement('canvas'); c.width = c.height = size;
+      c.getContext('2d').drawImage(img, sx, sy, s, s, 0, 0, size, size);
+      URL.revokeObjectURL(url); res(c.toDataURL('image/jpeg', .85));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error(file.name)); };
+    img.src = url;
+  });
+}
+
+const AV_COLORS = ['#2F6DB5','#0F7E80','#6B52A3','#3A7D44','#A23E6B','#4F5D95','#8C6420','#2E7D9A','#5C6B7A','#B2532B'];
+
+/* =========================================================
+   Data build (deterministic mock)
+   ========================================================= */
+function mulberry32(a){ return function(){ a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const R = mulberry32(87102026);
+const pick = a => a[Math.floor(R() * a.length)];
+const rint = (a, b) => a + Math.floor(R() * (b - a + 1));
+
+const TR = {'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'e','ж':'zh','з':'z','и':'i','й':'y','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f','х':'kh','ц':'ts','ч':'ch','ш':'sh','щ':'sch','ъ':'','ы':'y','ь':'','э':'e','ю':'yu','я':'ya','ә':'a','ғ':'g','қ':'k','ң':'n','ө':'o','ұ':'u','ү':'u','һ':'h','і':'i'};
+const translit = s => [...s.toLowerCase()].map(c => TR[c] ?? c).join('');
+const NM = {'ё':'е','ә':'а','ғ':'г','қ':'к','ң':'н','ө':'о','ұ':'у','ү':'у','һ':'х','і':'и'};
+const norm = s => [...String(s).toLowerCase()].map(c => NM[c] ?? c).join('');
+const femSur = s => /(ов|ев|ин)$/.test(s) ? s + 'а' : s;
+
+const D = {}, E = {};
+const DEPTS = [], EMPS = [];
+
+function buildData(){
+  DEPT_SPEC.forEach((s, i) => {
+    const d = { ...s, order:i, children:[], staff:[], headId:null };
+    d.phone = `+7 (7122) 25-${rint(10, 99)}-${rint(10, 99)}`;
+    D[d.id] = d; DEPTS.push(d);
+  });
+  DEPTS.forEach(d => { if (d.p) D[d.p].children.push(d.id); });
+  const used = new Set(), emails = new Set();
+  let n = 0, internalSeq = 2100;
+
+  function mkEmp(d, posKey, isHead, o){
+    let g = o?.g;
+    if (!g){
+      if (MALE_ONLY.has(posKey)) g = R() < .93 ? 'm' : 'f';
+      else if (FEM_BIAS[posKey] != null) g = R() < FEM_BIAS[posKey] ? 'f' : 'm';
+      else if (isHead) g = R() < .78 ? 'm' : 'f';
+      else g = R() < .58 ? 'm' : 'f';
+      if (posKey === 'gd') g = 'm';
+    }
+    let first, last, mid;
+    if (o){ ({ first, last, mid } = o); }
+    else {
+      for (let tries = 0; tries < 40; tries++){
+        if (R() < .68){ first = pick(g === 'm' ? KZ_M : KZ_F); last = pick(KZ_SUR); mid = pick(KZ_PAT) + (g === 'm' ? 'ович' : 'овна'); }
+        else { first = pick(g === 'm' ? RU_M : RU_F); last = pick(RU_SUR); mid = pick(RU_PAT)[g === 'm' ? 0 : 1]; }
+        if (g === 'f') last = femSur(last);
+        if (!used.has(last + first)) break;
+      }
+    }
+    used.add(last + first);
+    const id = 'e' + (++n);
+    internalSeq += 3;
+    const internal = o?.internal || String(internalSeq);
+    const cat = POS[posKey][2];
+    let em = translit(last) + '.' + translit(first)[0];
+    while (emails.has(em)) em += translit(first)[1] || '1';
+    emails.add(em);
+    const e = {
+      id, last, first, mid, g, posKey, dept:d.id, isHead, cat,
+      ru:`${last} ${first} ${mid}`, kz:`${last} ${first} ${mid}`,
+      internal,
+      work: cat === 'W' ? null : `+7 (7122) 25-${internal.slice(0, 2)}-${internal.slice(2)}`,
+      mobile: cat === 'L' ? `+7 (701) ${rint(200, 989)}-${pad(rint(10, 99))}-${pad(rint(10, 99))}` : null,
+      email: em + '@anpz.kz',
+      office: d.room ? `${d.loc}, каб. ${d.room}${pad(rint(1, 24))}` : d.loc,
+      status:'work', from:null, to:null, subId:null, hidden:false, manual:null,
+      avc: AV_COLORS[n % AV_COLORS.length]
+    };
+    E[id] = e; EMPS.push(e); d.staff.push(id);
+    if (isHead) d.headId = id;
+    return e;
+  }
+
+  DEPTS.forEach(d => {
+    mkEmp(d, d.head, true);
+    d.staff_spec = d.staff;
+  });
+  DEPTS.forEach(d => {
+    DEPT_SPEC.find(s => s.id === d.id).staff.forEach(s => {
+      if (typeof s === 'string') mkEmp(d, s, false); else mkEmp(d, s.p, false, s.o);
+    });
+  });
+
+  // managers
+  // reporting lines: specialists of a unit with a deputy report to the deputy; secretaries — to the head
+  const DIRECT = new Set(['secretary','assistant']);
+  EMPS.forEach(e => {
+    const d = D[e.dept];
+    const dep = d.staff.map(x => E[x]).find(isDeputy);
+    if (e.isHead) e.managerId = d.p ? D[d.p].headId : null;
+    else if (dep && !isDeputy(e) && !DIRECT.has(e.posKey)) e.managerId = dep.id;
+    else e.managerId = d.headId;
+  });
+
+  // statuses
+  const forced = new Set();
+  const H = id => E[D[id].headId];
+  const byName = (last, first) => EMPS.find(e => e.last === last && e.first === first);
+  const iv = byName('Иванов', 'Игорь'), iva = byName('Иванова', 'Елена');
+  const deputyOf = id => D[id].staff.map(x => E[x]).find(isDeputy);
+  const staffOf = (id, p) => D[id].staff.map(x => E[x]).find(e => e.posKey === p);
+  function force(e, st, a, b, subId){ forced.add(e.id); e.status = st; if (st !== 'work'){ e.from = addDays(TODAY, a); e.to = addDays(TODAY, b); e.subId = subId || null; } }
+  [H('d0'), H('d3'), H('d1'), H('d11'), iv, deputyOf('d111'), H('d6'), H('d4'), deputyOf('d6'), H('d61'), H('d62'), deputyOf('d62'), staffOf('d6', 'it_pm'), staffOf('d61', 'support')].forEach(e => force(e, 'work'));
+  force(staffOf('d61', 'sysadmin'), 'vacation', -5, 9);
+  force(staffOf('d62', 'dev1c'), 'sick', -1, 3);
+  force(staffOf('d61', 'net_eng'), 'trip', -2, 2);
+  force(staffOf('d6', 'infosec'), 'training', 0, 4);
+  force(H('d111'), 'vacation', -7, 16, deputyOf('d111').id);
+  force(H('d21'), 'trip', -1, 3, iv.id);
+  force(H('d31'), 'vacation', -4, 12, iva.id);
+  force(iva, 'sick', -2, 4);
+  force(H('d5'), 'trip', 0, 5);
+  force(H('d42'), 'training', -2, 9);
+
+  const W = [['work', .86], ['vacation', .065], ['sick', .03], ['trip', .03], ['training', .01], ['other', .005]];
+  EMPS.forEach(e => {
+    if (forced.has(e.id)) return;
+    let r = R(), st = 'work';
+    for (const [c, w] of W){ if (r < w){ st = c; break; } r -= w; }
+    e.status = st;
+    if (st === 'vacation'){ e.from = addDays(TODAY, -rint(0, 10)); e.to = addDays(TODAY, rint(3, 20)); }
+    if (st === 'sick'){ e.from = addDays(TODAY, -rint(0, 4)); e.to = addDays(TODAY, rint(1, 7)); }
+    if (st === 'trip'){ e.from = addDays(TODAY, -rint(0, 3)); e.to = addDays(TODAY, rint(1, 9)); }
+    if (st === 'training'){ e.from = addDays(TODAY, -rint(0, 2)); e.to = addDays(TODAY, rint(1, 5)); }
+    if (st === 'other'){ e.from = TODAY; e.to = TODAY; }
+  });
+
+  // substitutes (as from HR system)
+  EMPS.forEach(e => {
+    if (e.status === 'work' || e.subId) return;
+    const d = D[e.dept];
+    const colleagues = d.staff.map(x => E[x]).filter(x => x.id !== e.id && x.status === 'work');
+    let s = null;
+    if (e.isHead){
+      s = colleagues.find(isDeputy)
+        || d.children.map(c => H(c)).find(x => x && x.status === 'work')
+        || colleagues.find(x => x.cat === 'S');
+    } else {
+      s = colleagues.find(x => x.posKey === e.posKey) || colleagues.find(x => x.cat !== 'W' && !x.isHead) || colleagues.find(x => !x.isHead) || E[d.headId];
+    }
+    e.subId = s ? s.id : null;
+  });
+
+  EMPS.forEach(e => { e._orig = { office:e.office, subId:e.subId, hidden:e.hidden }; });
+  applyOverrides();
+  indexSearch();
+
+  const now = new Date();
+  const lastQ = new Date(now); lastQ.setMinutes(Math.floor(now.getMinutes() / 15) * 15, 0, 0);
+  state.lastSync = lastQ;
+  const at = (mAgo, base = lastQ) => new Date(base.getTime() - mAgo * 6e4);
+  const night = new Date(TODAY); night.setHours(3, 0, 0, 0);
+  state.syncLog = [
+    { at:lastQ, src:'statusSync', res:'ok', ch:2, err:'' },
+    { at:at(15), src:'statusSync', res:'ok', ch:0, err:'' },
+    { at:at(30), src:'statusSync', res:'ok', ch:1, err:'' },
+    { at:at(45), src:'adSync', res:'warn', ch:3, err:'Таймаут ответа LDAP (повтор успешен)' },
+    { at:night < lastQ ? night : at(120), src:'structSync', res:'ok', ch:4, err:'' }
+  ];
+  if (!state.audit){
+    state.audit = [
+      { at:at(95).toISOString(), user:'hr.admin', action:'auditEdit', obj:`${iv.last} ${iv.first[0]}. — ${t('office')}` },
+      { at:new Date(night.getTime() - 9 * 36e5).toISOString(), user:'sys.admin', action:'auditSync', obj:'1С:ЗУП' }
+    ];
+  }
+}
+
+function applyOverrides(){
+  const ov = store.get('overrides', {});
+  EMPS.forEach(e => { Object.assign(e, e._orig); e.manual = null; });
+  Object.entries(ov).forEach(([id, o]) => {
+    const e = E[id]; if (!e) return;
+    if (o.office != null && o.office !== '') e.office = o.office;
+    if (o.subId) e.subId = o.subId;
+    e.hidden = !!o.hidden;
+    e.manual = { by:o.by, at:o.at, fields:o.fields || [] };
+  });
+}
+
+function indexSearch(){
+  EMPS.forEach(e => {
+    e._n = norm(e.ru); e._nl = translit(e._n);
+    e._p = norm(POS[e.posKey][0] + ' ' + POS[e.posKey][1]);
+    e._d = norm(D[e.dept].ru + ' ' + D[e.dept].kz + ' ' + D[e.dept].sh);
+    e._dig = (e.internal + ' ' + (e.work || '').replace(/\D/g, '') + ' ' + (e.mobile || '').replace(/\D/g, ''));
+  });
+  DEPTS.forEach(d => { d._n = norm(d.ru + ' ' + d.kz + ' ' + d.sh); d._nl = translit(d._n); });
+}
+
+/* =========================================================
+   Data helpers
+   ========================================================= */
+const isAdmin = () => state.role === 'hr' || state.role === 'sys';
+const canStatusExport = () => state.role !== 'employee';
+const vis = e => e && (!e.hidden || state.view === 'admin');
+const visibleEmps = () => EMPS.filter(e => !e.hidden);
+const dname = d => state.lang === 'kz' && d.kz ? d.kz : d.ru;
+const dshort = d => d.id === 'd0' ? d.sh : dname(d);
+const pos = e => POS[e.posKey][L()];
+const nameOf = e => state.lang === 'kz' ? e.kz : e.ru;
+const shortName = e => `${e.last} ${e.first[0]}. ${e.mid[0]}.`;
+const initials = e => (e.last[0] + e.first[0]).toUpperCase();
+function posAbbr(e){
+  let p = pos(e);
+  if (state.lang === 'ru') p = p.replace(/^Ведущий /, 'вед. ').replace(/^Главный /, 'гл. ').replace(/^Заместитель /, 'зам. ').replace(/^Начальник /, 'нач. ').replace(/ генерального директора/, ' ГД');
+  return p.charAt(0).toLowerCase() + p.slice(1);
+}
+const dirColor = d => { let x = d; while (x && !x.c) x = D[x.p]; return x ? x.c : '#0B3B6F'; };
+function descendants(id){ const out = [id]; D[id].children.forEach(c => out.push(...descendants(c))); return out; }
+function deptEmps(id, nested){ const ids = nested ? descendants(id) : [id]; return ids.flatMap(x => D[x].staff.map(s => E[s])).filter(e => !e.hidden); }
+function chain(id){ const out = []; let d = D[id]; while (d){ out.unshift(d); d = D[d.p]; } return out; }
+function counts(list){ const c = {}; STATUSES.forEach(s => c[s.code] = 0); list.forEach(e => c[e.status]++); return c; }
+const absentToday = () => visibleEmps().filter(e => e.status !== 'work');
+function presentUp(e){ let m = E[e.managerId], g = 0; while (m && (m.status !== 'work' || m.hidden) && g++ < 10) m = E[m.managerId]; return m || null; }
+function subInfo(e){
+  if (e.status === 'work') return null;
+  let s = E[e.subId]; if (s && s.hidden) s = null;
+  if (!s) return { sub:presentUp(e), warn:false };
+  if (s.status !== 'work') return { sub:s, warn:true, next:presentUp(e) };
+  return { sub:s, warn:false };
+}
+const actingFor = e => e.status === 'work' ? visibleEmps().filter(x => x.status !== 'work' && subInfo(x)?.sub === e) : [];
+function deptSorted(list){
+  return list.slice().sort((a, b) => D[a.dept].order - D[b.dept].order || (b.isHead - a.isHead) || isDeputy(b) - isDeputy(a) || a.ru.localeCompare(b.ru, 'ru'));
+}
+
+/* =========================================================
+   Small renderers
+   ========================================================= */
+function avatar(e, size = 40, dot = true){
+  const s = e.status;
+  return `<span class="av" style="--s:${size}px;--avc:${e.avc}" aria-hidden="true"><img class="av-img" src="${photoSrc(e)}" alt="" draggable="false">${dot ? `<span class="av-dot st-${s}" title="${esc(sName(s))}">${size >= 40 && s !== 'work' ? ic(ST[s].icon, 10) : ''}</span>` : ''}</span>`;
+}
+function statusText(e){
+  if (e.status === 'work') return sName('work');
+  return state.lang === 'kz' ? `${sName(e.status)} · ${fmtD(e.to)} ${t('until')}` : `${sName(e.status)} ${t('until')} ${fmtD(e.to)}`;
+}
+const badge = (e, lg) => `<span class="badge st-${e.status} ${lg ? 'lg' : ''}">${ic(ST[e.status].icon, lg ? 14 : 12)}${esc(statusText(e))}</span>`;
+const sBadge = code => `<span class="badge st-${code}">${ic(ST[code].icon, 12)}${esc(sName(code))}</span>`;
+function periodHTML(e){
+  if (e.status === 'work') return '';
+  const days = Math.round((e.to - e.from) / dayMs) + 1;
+  return `<div class="period"><b>${fmtD(e.from)} — ${fmtD(e.to)}</b><small>${t('period')} · ${days} ${state.lang === 'kz' ? 'күн' : plural(days, ['день','дня','дней'])}</small></div>`;
+}
+function subHTML(e){
+  const si = subInfo(e); if (!si || !si.sub) return '';
+  const s = si.sub;
+  let h = `<div class="sub"><span class="sub-l">${t('substitute')}:</span> <button class="link" data-emp="${s.id}">${esc(shortName(s))}</button>, ${esc(posAbbr(s))}, ${t('intShort')} <b class="mono">${esc(s.internal)}</b>`;
+  if (si.warn) h += ` <span class="badge st-${s.status}" style="margin-left:2px">${ic(ST[s.status].icon, 11)}${esc(sName(s.status))}</span><div class="sub-warn">${ic('alert', 15)}<span>${t('subAbsent')} ${si.next ? `<button class="link" data-emp="${si.next.id}">${esc(shortName(si.next))}</button>, ${esc(posAbbr(si.next))}, ${t('intShort')} <b class="mono">${esc(si.next.internal)}</b>` : '—'}</span></div>`;
+  return h + '</div>';
+}
+const copyBtn = (val, label) => `<button class="icon-btn sm" data-copy="${esc(val)}" aria-label="${esc(label)}" title="${esc(label)}">${ic('copy', 15)}</button>`;
+function personRow(e){
+  return `<button class="person" data-emp="${e.id}">${avatar(e, 40)}<span class="p-txt"><b>${esc(nameOf(e))}</b><small>${esc(pos(e))}</small></span><span class="p-right">${e.status !== 'work' ? badge(e) : ''}<span class="mono muted">${t('intShort')} ${esc(e.internal)}</span></span></button>`;
+}
+function statusBars(c, total){
+  const segs = STATUSES.filter(s => c[s.code]).map(s => `<i class="st-${s.code}" style="flex:${c[s.code]}" title="${esc(sSum(s.code))}: ${c[s.code]}"></i>`).join('');
+  const leg = STATUSES.filter(s => c[s.code]).map(s => `<span class="st-${s.code}"><span class="sdot">${ic(ST[s.code].icon, 10)}</span>${esc(sSum(s.code))} <b>${c[s.code]}</b></span>`).join('');
+  return `<div class="sbar" role="img" aria-label="${esc(STATUSES.filter(s => c[s.code]).map(s => sSum(s.code) + ' ' + c[s.code]).join(', '))}">${segs}</div><div class="slegend">${leg}</div>`;
+}
+function deptOptions(sel, withAll){
+  const rows = [];
+  (function walk(id, lvl){ const d = D[id]; rows.push(`<option value="${d.id}" ${sel === d.id ? 'selected' : ''}>${'  '.repeat(lvl).replace(/ /g, ' ')}${esc(d.id === 'd0' ? d.sh + ' — ' + (state.lang === 'kz' ? 'басшылық' : 'руководство и все подразделения') : dname(d))}</option>`); d.children.forEach(c => walk(c, lvl + 1)); })('d0', 0);
+  return (withAll ? `<option value="">${t('allDepts')}</option>` : '') + rows.join('');
+}
+
+/* =========================================================
+   Theme / i18n application
+   ========================================================= */
+const mqDark = matchMedia('(prefers-color-scheme: dark)');
+const effTheme = () => state.theme === 'auto' ? (mqDark.matches ? 'dark' : 'light') : state.theme;
+function applyTheme(){
+  if (state.theme === 'auto') document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme', state.theme);
+  $('#theme-btn').innerHTML = ic(effTheme() === 'dark' ? 'sun' : 'moon', 18);
+  if (state.renderedView === 'structure') drawMinimap();
+}
+mqDark.addEventListener?.('change', applyTheme);
+function applyI18n(){
+  document.documentElement.lang = state.lang === 'kz' ? 'kk' : 'ru';
+  $$('[data-i18n]').forEach(el => el.textContent = t(el.dataset.i18n));
+  $$('[data-i18n-ph]').forEach(el => el.placeholder = t(el.dataset.i18nPh));
+  $$('[data-i18n-aria]').forEach(el => { el.setAttribute('aria-label', t(el.dataset.i18nAria)); el.title = t(el.dataset.i18nAria); });
+  $$('[data-lang]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === state.lang)));
+  document.title = `${t('appTitle')} АНПЗ`;
+}
+function renderUser(){
+  $('#user-btn').innerHTML = `<span class="av" style="--s:32px;--avc:#F2A900;color:#0B3B6F">${ic('user', 16)}</span><span class="ub-txt"><b>${t('demoUser')}</b><small>${t('role_' + state.role)}</small></span>`;
+  const roles = ['employee','leader','hr','sys'], themes = ['auto','light','dark'];
+  $('#user-menu').innerHTML = `
+    <h4>${t('roleDemo')}</h4>
+    ${roles.map(r => `<button class="opt" data-role="${r}"><span class="ck">${state.role === r ? ic('check', 16) : ''}</span>${t('role_' + r)}</button>`).join('')}
+    <h4>${t('themeL')}</h4>
+    ${themes.map(x => `<button class="opt" data-theme-set="${x}"><span class="ck">${state.theme === x ? ic('check', 16) : ''}</span>${ic(x === 'auto' ? 'monitor' : x === 'light' ? 'sun' : 'moon', 16)} ${t('th_' + x)}</button>`).join('')}
+    <div class="note">${t('demoNote')} · SSO (Active Directory) в боевой версии</div>`;
+}
+function renderNav(){
+  const items = [['structure','tree'],['leaders','briefcase'],['directory','book'],['absent','calx']];
+  if (isAdmin()) items.push(['admin','sliders']);
+  const n = absentToday().length;
+  const a = (v, icn, short) => `<a href="#/${v}" class="nav-item ${state.view === v ? 'active' : ''}" ${state.view === v ? 'aria-current="page"' : ''} title="${esc(t('nav_' + v))}">${ic(icn, 20)}<span>${esc(t((short ? 'navs_' : 'nav_') + v))}</span>${v === 'absent' ? `<span class="nav-count">${n}</span>` : ''}</a>`;
+  $('#side-nav').innerHTML = items.map(([v, i]) => a(v, i, false)).join('');
+  $('#bottom-nav').innerHTML = items.map(([v, i]) => a(v, i, true)).join('');
+  $('#side-foot').innerHTML = `<div class="legend">${STATUSES.map(s => `<div class="st-${s.code}"><span class="sdot">${ic(s.icon, 10)}</span>${esc(sName(s.code))}</div>`).join('')}</div>
+    <div class="sync-note">${ic('refresh', 14)}<span>${t('updatedAt')} ${fmtDT(state.lastSync)}</span></div>
+    <div style="margin-top:6px;color:var(--faint)">${t('demoNote')}</div>`;
+}
+
+/* =========================================================
+   Router
+   ========================================================= */
+const VIEWS = ['structure','leaders','directory','absent','admin'];
+let curHash = location.hash;
+function parseHash(){
+  const h = curHash.slice(1) || '/structure';
+  const [path, qs] = h.split('?');
+  const v = path.replace(/^\//, '');
+  const p = new URLSearchParams(qs || '');
+  return { view: VIEWS.includes(v) ? v : 'structure', emp:p.get('emp'), dept:p.get('dept') };
+}
+function go(view, params){
+  const qs = params ? '?' + new URLSearchParams(params).toString() : '';
+  curHash = `#/${view}${qs}`;
+  try { if (location.hash !== curHash) history.pushState(null, '', curHash); } catch (e) {}
+  route();
+}
+function route(){
+  const r = parseHash();
+  if (r.view !== state.renderedView){ state.view = r.view; renderView(); }
+  if (r.emp) openEmpDrawer(r.emp);
+  else if (r.dept){
+    openDeptDrawer(r.dept);
+    if (state.view === 'structure' && D[r.dept] && state.activeDept !== r.dept) focusDept(r.dept);
+  } else hideDrawer();
+}
+const onNav = () => { if (location.hash !== curHash){ curHash = location.hash; route(); } };
+window.addEventListener('hashchange', onNav);
+window.addEventListener('popstate', onNav);
+const openEmp = id => go(state.view, { emp:id });
+const openDept = id => go(state.view, { dept:id });
+const linkFor = (kind, id) => location.href.split('#')[0] + `#/structure?${kind}=${id}`;
+
+function renderView(){
+  state.renderedView = state.view;
+  renderNav();
+  const v = $('#view');
+  ({ structure:renderStructure, leaders:renderLeaders, directory:renderDirectory, absent:renderAbsent, admin:renderAdmin })[state.view](v);
+  $('#main').scrollTop = 0;
+}
+const rerender = () => { state.renderedView = null; route(); };
+
+/* =========================================================
+   Structure view
+   ========================================================= */
+const isMobile = () => matchMedia('(max-width: 767px)').matches;
+const curMode = () => state.mode || (isMobile() ? 'list' : 'people');
+function summaryHTML(){
+  const c = counts(visibleEmps());
+  return `<span class="sum-label">${t('today')}, ${fmtLong(TODAY)}:</span>` +
+    STATUSES.filter(s => s.code === 'work' || c[s.code]).map(s => `<button class="sum-chip st-${s.code}" data-sum="${s.code}"><span class="sdot">${ic(s.icon, 10)}</span>${esc(sSum(s.code))} <b>${c[s.code]}</b></button>`).join('') +
+    `<span class="sum-upd">${ic('refresh', 13)} ${t('updatedAt')} ${fmtDT(state.lastSync)}</span>`;
+}
+function renderStructure(v){
+  const mode = curMode(), canvasMode = mode !== 'list';
+  if (mode === 'people' && !state.pexp) initPexp(state.pDept);
+  v.innerHTML = `<div class="st-wrap">
+    <div class="st-head">
+      <div class="print-only"><b style="font-size:18px">${t('appTitle')} АНПЗ</b> · ${t('formed')}: ${fmtDT(new Date())}</div>
+      <div class="summary">${summaryHTML()}</div>
+      <div class="st-bar">
+        <nav class="crumbs" id="crumbs" aria-label="breadcrumbs"></nav>
+        <div class="st-tools">
+          <div class="seg" role="group">
+            <button data-mode="people" aria-pressed="${mode === 'people'}">${ic('users', 16)}<span class="lbl">${t('modePeople')}</span></button>
+            <button data-mode="tree" aria-pressed="${mode === 'tree'}">${ic('tree', 16)}<span class="lbl">${t('modeTree')}</span></button>
+            <button data-mode="list" aria-pressed="${mode === 'list'}">${ic('list', 16)}<span class="lbl">${t('modeList')}</span></button>
+          </div>
+          ${mode === 'people' ? `<select id="p-dept" aria-label="${t('scope')}" style="max-width:270px">${deptOptions(state.pDept, false)}</select>` : ''}
+          <button class="btn" data-act="expand-all" title="${t('expandAll')}">${ic('expand', 16)}<span class="lbl">${t('expandAll')}</span></button>
+          <button class="btn" data-act="collapse-all" title="${t('collapseAll')}">${ic('collapse', 16)}<span class="lbl">${t('collapseAll')}</span></button>
+          ${canvasMode ? `<button class="btn" data-act="print-tree" title="${t('pdf')}">${ic('printer', 16)}<span class="lbl">${t('pdf')}</span></button>` : ''}
+        </div>
+      </div>
+    </div>
+    ${canvasMode ? `<div class="viewport" id="vp" tabindex="0" aria-label="${t('nav_structure')}">
+        <div class="canvas" id="cv"></div>
+        <div class="hint">${t('dragHint')}</div>
+        <div class="zoombar">
+          <button class="icon-btn" data-act="zoom-out" aria-label="${t('zoomOut')}" title="${t('zoomOut')}">${ic('minus', 16)}</button>
+          <span class="zv" id="zv">100%</span>
+          <button class="icon-btn" data-act="zoom-in" aria-label="${t('zoomIn')}" title="${t('zoomIn')}">${ic('plus', 16)}</button>
+          <button class="icon-btn" data-act="fit" aria-label="${t('fit')}" title="${t('fit')}">${ic('fit', 16)}</button>
+        </div>
+        <canvas class="minimap" id="minimap" width="400" height="260" aria-hidden="true"></canvas>
+      </div>` : `<div class="acc-wrap" id="acc"></div>`}
+  </div>`;
+  renderCrumbs();
+  $('#p-dept')?.addEventListener('change', e => setPeopleScope(e.target.value));
+  if (canvasMode){ renderTree(); setupViewport(); requestAnimationFrame(() => { if (!state.tf) fit(false); else applyTf(); }); }
+  else renderList();
+}
+function renderCrumbs(){
+  const el = $('#crumbs'); if (!el) return;
+  el.innerHTML = chain((curMode() === 'people' ? state.pDept : state.activeDept) || 'd0').map((d, i) => `${i ? `<span class="sep">${ic('chevR', 14)}</span>` : ''}<button data-crumb="${d.id}">${esc(dshort(d))}</button>`).join('');
+}
+const kidsOf = d => d.children.map(c => D[c]);
+function nodeHTML(d, depth){
+  const head = E[d.headId]; const all = deptEmps(d.id, true); const c = counts(all); const kids = kidsOf(d); const open = state.expanded.has(d.id);
+  const mini = STATUSES.filter(s => c[s.code]).map(s => `<span class="mc st-${s.code}" title="${esc(sSum(s.code))}: ${c[s.code]}">${ic(s.icon, 11)}${c[s.code]}</span>`).join('');
+  return `<div class="node ${depth === 0 ? 'node-root' : ''} ${state.activeDept === d.id ? 'active' : ''}" data-node="${d.id}" style="--dir:${dirColor(d)}">
+    <button class="node-title" data-open-dept="${d.id}">${esc(dname(d))}</button>
+    ${head && !head.hidden ? `<button class="node-person" data-emp="${head.id}">${avatar(head, 44)}<span class="np-txt"><b>${esc(nameOf(head))}</b><small>${esc(pos(head))}</small>${head.status !== 'work' ? badge(head) : ''}</span></button>` : ''}
+    <div class="node-meta">
+      <button class="nm-people" data-people="${d.id}" title="${esc(t('peopleChart'))}: ${esc(empCount(all.length))}">${ic('users', 14)}${all.length}</button>
+      <span class="nm-st">${mini}</span>
+      ${kids.length ? `<button class="node-toggle" data-toggle="${d.id}" aria-expanded="${open}" aria-label="${esc(dname(d))}: ${kids.length}">${ic('chev', 14)}${kids.length}</button>` : ''}
+    </div>
+  </div>`;
+}
+function tnHTML(d, depth){
+  const kids = kidsOf(d); const open = kids.length && state.expanded.has(d.id);
+  let h = `<div class="tn ${depth === 0 ? 'tn-root' : ''}">${nodeHTML(d, depth)}`;
+  if (open){
+    h += depth === 0
+      ? `<div class="kids-h">${kids.map(k => `<div class="kid-h">${tnHTML(k, depth + 1)}</div>`).join('')}</div>`
+      : `<div class="kids-v">${kids.map(k => `<div class="kid-v">${tnHTML(k, depth + 1)}</div>`).join('')}</div>`;
+  }
+  return h + '</div>';
+}
+/* ---------- people org chart: head → deputy → specialists, sub-units as branches ---------- */
+function peopleKids(scopeId){
+  const set = new Set(descendants(scopeId));
+  const list = visibleEmps().filter(e => set.has(e.dept));
+  const ids = new Set(list.map(e => e.id)), km = new Map();
+  list.forEach(e => { if (e.managerId && ids.has(e.managerId)){ if (!km.has(e.managerId)) km.set(e.managerId, []); km.get(e.managerId).push(e); } });
+  const rank = e => isDeputy(e) ? 0 : e.isHead ? 1 : (e.posKey === 'secretary' || e.posKey === 'assistant') ? 5 : e.cat === 'L' ? 2 : e.cat === 'S' ? 3 : 4;
+  km.forEach(a => a.sort((x, y) => rank(x) - rank(y) || D[x.dept].order - D[y.dept].order || x.ru.localeCompare(y.ru, 'ru')));
+  return { km, list, root:E[D[scopeId].headId] };
+}
+function initPexp(id){
+  const { km } = peopleKids(id);
+  state.pexp = id === 'd0' ? new Set([D.d0.headId, ...D.d0.children.map(c => D[c].headId)]) : new Set(km.keys());
+}
+function setPeopleScope(id){
+  if (!D[id]) return;
+  state.pDept = id; state.activeDept = id; initPexp(id); state.tf = null;
+  if (state.renderedView === 'structure' && curMode() === 'people'){
+    const s = $('#p-dept'); if (s) s.value = id;
+    renderCrumbs(); renderTree(); requestAnimationFrame(() => fit(false));
+  }
+}
+function pnodeHTML(e, depth, nk, open){
+  const d = D[e.dept], si = subInfo(e);
+  let chip = '';
+  if (e.isHead) chip = `<button class="pn-chip" data-people="${d.id}" style="--dir:${dirColor(d)}" title="${esc(t('peopleChart'))}: ${esc(dname(d))}">${ic('building', 12)}${esc(d.id === 'd0' ? d.sh : dname(d))}</button>`;
+  else if (isDeputy(e)) chip = `<span class="pn-chip pn-chip-dep">${t('deputyRole')}</span>`;
+  return `<div class="pnode ${depth === 0 ? 'pnode-root' : ''} st-${e.status} ${state.activeEmp === e.id ? 'active' : ''}" data-node-p="${e.id}" data-emp="${e.id}" role="button" tabindex="0" aria-label="${esc(nameOf(e))}, ${esc(pos(e))}, ${esc(statusText(e))}" style="--dir:${dirColor(d)}">
+    ${chip}
+    <div class="pn-main">${avatar(e, depth === 0 ? 76 : 60)}<div class="pn-txt"><b>${esc(e.last)}</b><span>${esc(e.first)} ${esc(e.mid)}</span><small>${esc(pos(e))}</small></div></div>
+    <div class="pn-foot">${badge(e)}<span class="pn-int" title="${esc(t('internal'))}">${ic('phone', 12)}${esc(e.internal)}</span>${nk ? `<button class="node-toggle" data-ptoggle="${e.id}" aria-expanded="${open}" aria-label="${esc(shortName(e))}: ${nk}">${ic('chev', 14)}${nk}</button>` : ''}</div>
+    ${si && si.sub ? `<div class="pn-sub ${si.warn ? 'warn' : ''}">${si.warn ? ic('alert', 12) : ''}${t('substitute')}: <button class="link" data-emp="${si.sub.id}">${esc(shortName(si.sub))}</button>, ${t('intShort')} ${esc(si.sub.internal)}</div>` : ''}
+  </div>`;
+}
+function ptnHTML(e, depth, km){
+  const kids = km.get(e.id) || []; const open = kids.length && state.pexp.has(e.id);
+  let h = `<div class="tn ${depth === 0 ? 'tn-root' : ''}">${pnodeHTML(e, depth, kids.length, open)}`;
+  if (open){
+    h += depth === 0
+      ? `<div class="kids-h">${kids.map(k => `<div class="kid-h">${ptnHTML(k, depth + 1, km)}</div>`).join('')}</div>`
+      : `<div class="kids-v">${kids.map(k => `<div class="kid-v">${ptnHTML(k, depth + 1, km)}</div>`).join('')}</div>`;
+  }
+  return h + '</div>';
+}
+function peopleHTML(){
+  if (!state.pexp) initPexp(state.pDept);
+  const { km, root } = peopleKids(state.pDept);
+  return root && !root.hidden ? ptnHTML(root, 0, km) : `<div class="empty">${t('nothing')}</div>`;
+}
+function renderTree(){ const cv = $('#cv'); if (cv) cv.innerHTML = curMode() === 'people' ? peopleHTML() : tnHTML(D.d0, 0); drawMinimapSoon(); }
+function accHTML(d, depth){
+  const kids = kidsOf(d); const open = state.expanded.has(d.id); const head = E[d.headId]; const all = deptEmps(d.id, true);
+  const staff = d.staff.map(x => E[x]).filter(e => !e.hidden && !e.isHead).sort((a, b) => isDeputy(b) - isDeputy(a) || a.cat.localeCompare(b.cat));
+  return `<div class="acc ${state.activeDept === d.id ? 'active' : ''}" data-node="${d.id}" style="--dir:${dirColor(d)}">
+    <div class="acc-row">
+      ${kids.length || staff.length ? `<button class="acc-tg" data-toggle="${d.id}" aria-expanded="${open}" aria-label="${esc(dname(d))}">${ic('chevR', 16)}</button>` : `<span class="acc-tg-sp"></span>`}
+      <button class="acc-main" data-open-dept="${d.id}"><span class="acc-name">${esc(dname(d))}</span><span class="acc-sub">${head && !head.hidden ? esc(shortName(head)) + ' · ' + esc(head.status === 'work' ? pos(head) : statusText(head)) : ''}</span></button>
+      ${head && !head.hidden ? `<button class="acc-av" data-emp="${head.id}" aria-label="${esc(nameOf(head))}">${avatar(head, 36)}</button>` : ''}
+      <span class="acc-count" title="${esc(empCount(all.length))}">${ic('users', 13)}${all.length}</span>
+    </div>
+    ${open && (kids.length || staff.length) ? `<div class="acc-kids">${staff.length ? `<div class="acc-people">${staff.map(personRow).join('')}</div>` : ''}${kids.map(k => accHTML(k, depth + 1)).join('')}</div>` : ''}
+  </div>`;
+}
+function renderList(){ const el = $('#acc'); if (el) el.innerHTML = accHTML(D.d0, 0); }
+
+// pan & zoom
+let dragMoved = false;
+const tfApply = () => { const cv = $('#cv'); if (!cv || !state.tf) return; cv.style.transform = `translate(${state.tf.x}px,${state.tf.y}px) scale(${state.tf.s})`; const zv = $('#zv'); if (zv) zv.textContent = Math.round(state.tf.s * 100) + '%'; drawMinimapSoon(); };
+const applyTf = tfApply;
+function animateTf(){ const cv = $('#cv'); if (!cv) return; cv.classList.add('anim'); applyTf(); clearTimeout(animateTf._t); animateTf._t = setTimeout(() => cv.classList.remove('anim'), 380); }
+function zoomAt(mx, my, factor, anim){
+  const tf = state.tf; const ns = clamp(tf.s * factor, .25, 2);
+  tf.x = mx - (mx - tf.x) * (ns / tf.s); tf.y = my - (my - tf.y) * (ns / tf.s); tf.s = ns;
+  anim ? animateTf() : applyTf();
+}
+function fit(anim = true){
+  const vp = $('#vp'), cv = $('#cv'); if (!vp || !cv) return;
+  const vw = vp.clientWidth, vh = vp.clientHeight, w = cv.offsetWidth, h = cv.offsetHeight;
+  const s = clamp(Math.min((vw - 24) / w, (vh - 24) / h, 1), .25, 1);
+  state.tf = { s, x:(vw - w * s) / 2, y:Math.max(8, Math.min(24, (vh - h * s) / 2)) };
+  anim ? animateTf() : applyTf();
+}
+function nodeBox(id){
+  const cv = $('#cv'), el = cv && cv.querySelector(id[0] === 'e' ? `[data-node-p="${id}"]` : `[data-node="${id}"]`); if (!el) return null;
+  const cr = cv.getBoundingClientRect(), er = el.getBoundingClientRect(), s = state.tf.s;
+  return { x:(er.left - cr.left) / s, y:(er.top - cr.top) / s, w:er.width / s, h:er.height / s, el };
+}
+function centerOn(id, pulse){
+  requestAnimationFrame(() => {
+    const vp = $('#vp'); if (!vp) return;
+    if (!state.tf) fit(false);
+    const b = nodeBox(id); if (!b) return;
+    const s = Math.max(state.tf.s, .8);
+    state.tf = { s, x:vp.clientWidth / 2 - (b.x + b.w / 2) * s, y:vp.clientHeight * .4 - (b.y + b.h / 2) * s };
+    animateTf();
+    if (pulse){ b.el.classList.add('pulse'); setTimeout(() => b.el.classList.remove('pulse'), 2900); }
+  });
+}
+function focusEmp(id, pulse = true){
+  const e = E[id]; if (!e || state.renderedView !== 'structure') return;
+  if (!descendants(state.pDept).includes(e.dept)){ state.pDept = 'd0'; initPexp('d0'); const s = $('#p-dept'); if (s) s.value = 'd0'; }
+  let m = E[e.managerId]; while (m){ state.pexp.add(m.id); m = E[m.managerId]; }
+  state.activeEmp = id; state.activeDept = e.dept;
+  renderCrumbs(); renderTree(); centerOn(id, pulse);
+}
+function togglePerson(id){
+  if (state.pexp.has(id)) state.pexp.delete(id); else state.pexp.add(id);
+  const before = nodeBox(id);
+  renderTree();
+  const after = nodeBox(id);
+  if (before && after){ state.tf.x += (before.x - after.x) * state.tf.s; state.tf.y += (before.y - after.y) * state.tf.s; applyTf(); }
+}
+function showPeople(id){
+  state.mode = 'people'; store.set('mode2', 'people');
+  state.pDept = id; state.activeDept = id; initPexp(id); state.tf = null;
+  if (state.renderedView === 'structure'){ go('structure'); renderView(); } else go('structure');
+}
+function focusDept(id, pulse = true){
+  if (!D[id]) return;
+  if (state.renderedView === 'structure' && curMode() === 'people'){ setPeopleScope(id); return; }
+  state.activeDept = id;
+  chain(id).slice(0, -1).forEach(d => state.expanded.add(d.id));
+  if (state.renderedView !== 'structure'){ return; }
+  renderCrumbs();
+  if (curMode() === 'list'){
+    renderList();
+    const el = $(`#acc [data-node="${id}"]`); if (el){ el.scrollIntoView({ block:'center', behavior:'smooth' }); }
+    return;
+  }
+  renderTree();
+  centerOn(id, pulse);
+}
+function toggleDept(id){
+  if (state.expanded.has(id)) state.expanded.delete(id); else state.expanded.add(id);
+  if (curMode() === 'list'){ renderList(); return; }
+  const before = nodeBox(id);
+  renderTree();
+  const after = nodeBox(id);
+  if (before && after){ state.tf.x += (before.x - after.x) * state.tf.s; state.tf.y += (before.y - after.y) * state.tf.s; applyTf(); }
+}
+function setupViewport(){
+  const vp = $('#vp'); if (!vp) return;
+  const ptrs = new Map(); let start = null, pinch = null;
+  vp.addEventListener('wheel', e => { e.preventDefault(); const r = vp.getBoundingClientRect(); zoomAt(e.clientX - r.left, e.clientY - r.top, Math.exp(-e.deltaY * .0016)); }, { passive:false });
+  vp.addEventListener('pointerdown', e => {
+    if (e.button !== 0 || e.target.closest('.zoombar,.minimap')) return;
+    ptrs.set(e.pointerId, { x:e.clientX, y:e.clientY });
+    if (ptrs.size === 1){ start = { x:e.clientX, y:e.clientY, tx:state.tf.x, ty:state.tf.y, cap:false }; dragMoved = false; }
+    else if (ptrs.size === 2){ const [a, b] = [...ptrs.values()]; pinch = { d:Math.hypot(a.x - b.x, a.y - b.y), s:state.tf.s, cx:(a.x + b.x) / 2, cy:(a.y + b.y) / 2, tx:state.tf.x, ty:state.tf.y }; start = null; }
+  });
+  vp.addEventListener('pointermove', e => {
+    if (!ptrs.has(e.pointerId)) return;
+    ptrs.set(e.pointerId, { x:e.clientX, y:e.clientY });
+    if (pinch && ptrs.size === 2){
+      const [a, b] = [...ptrs.values()], r = vp.getBoundingClientRect();
+      const ns = clamp(pinch.s * Math.hypot(a.x - b.x, a.y - b.y) / pinch.d, .25, 2);
+      const cx = pinch.cx - r.left, cy = pinch.cy - r.top;
+      state.tf = { s:ns, x:cx - (cx - pinch.tx) * (ns / pinch.s), y:cy - (cy - pinch.ty) * (ns / pinch.s) };
+      dragMoved = true; applyTf(); return;
+    }
+    if (!start) return;
+    const dx = e.clientX - start.x, dy = e.clientY - start.y;
+    if (!start.cap && Math.hypot(dx, dy) > 5){ start.cap = true; dragMoved = true; try { vp.setPointerCapture(e.pointerId); } catch (_) {} vp.classList.add('dragging'); }
+    if (start.cap){ state.tf.x = start.tx + dx; state.tf.y = start.ty + dy; applyTf(); }
+  });
+  const end = e => { ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null; if (!ptrs.size){ start = null; vp.classList.remove('dragging'); setTimeout(() => { dragMoved = false; }, 0); } };
+  vp.addEventListener('pointerup', end); vp.addEventListener('pointercancel', end);
+  vp.addEventListener('click', e => { if (dragMoved){ e.stopPropagation(); e.preventDefault(); } }, true);
+  vp.addEventListener('keydown', e => {
+    if (e.target !== vp) return;
+    const st = 60, m = { ArrowLeft:[st, 0], ArrowRight:[-st, 0], ArrowUp:[0, st], ArrowDown:[0, -st] };
+    if (m[e.key]){ e.preventDefault(); state.tf.x += m[e.key][0]; state.tf.y += m[e.key][1]; applyTf(); }
+    if (e.key === '+' || e.key === '='){ zoomAt(vp.clientWidth / 2, vp.clientHeight / 2, 1.2, true); }
+    if (e.key === '-'){ zoomAt(vp.clientWidth / 2, vp.clientHeight / 2, 1 / 1.2, true); }
+    if (e.key === '0'){ fit(); }
+  });
+  const mm = $('#minimap');
+  mm.addEventListener('click', e => {
+    const r = mm.getBoundingClientRect(), info = mm._info; if (!info) return;
+    const x = (e.clientX - r.left - info.ox) / info.m, y = (e.clientY - r.top - info.oy) / info.m;
+    state.tf.x = vp.clientWidth / 2 - x * state.tf.s; state.tf.y = vp.clientHeight / 2 - y * state.tf.s; animateTf();
+  });
+}
+let mmRaf = 0;
+function drawMinimapSoon(){ cancelAnimationFrame(mmRaf); mmRaf = requestAnimationFrame(drawMinimap); }
+function drawMinimap(){
+  const mm = $('#minimap'), cv = $('#cv'), vp = $('#vp'); if (!mm || !cv || !vp || !state.tf || mm.offsetParent === null) return;
+  const ctx = mm.getContext('2d'), W = mm.width, H = mm.height, k = W / mm.clientWidth;
+  const w = cv.offsetWidth, h = cv.offsetHeight, m = Math.min((W - 16) / w, (H - 16) / h);
+  const ox = (W - w * m) / 2, oy = (H - h * m) / 2;
+  mm._info = { m:m / k, ox:ox / k, oy:oy / k };
+  const cs = getComputedStyle(document.documentElement);
+  ctx.clearRect(0, 0, W, H);
+  const cr = cv.getBoundingClientRect(), s = state.tf.s;
+  $$('.node,.pnode', cv).forEach(n => {
+    const r = n.getBoundingClientRect();
+    ctx.fillStyle = n.classList.contains('active') ? cs.getPropertyValue('--amber') : n.style.getPropertyValue('--dir') || '#0B3B6F';
+    ctx.globalAlpha = n.classList.contains('active') ? 1 : .75;
+    ctx.fillRect(ox + (r.left - cr.left) / s * m, oy + (r.top - cr.top) / s * m, Math.max(2, r.width / s * m), Math.max(2, r.height / s * m));
+  });
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = cs.getPropertyValue('--accent').trim() || '#1E88E5'; ctx.lineWidth = 2.5;
+  ctx.strokeRect(ox + (-state.tf.x / s) * m, oy + (-state.tf.y / s) * m, vp.clientWidth / s * m, vp.clientHeight / s * m);
+}
+window.addEventListener('resize', () => { if (state.renderedView === 'structure') drawMinimapSoon(); });
+
+/* =========================================================
+   Drawers
+   ========================================================= */
+let lastFocus = null;
+function showDrawer(html){
+  const dr = $('#drawer');
+  if (!dr.classList.contains('open')) lastFocus = document.activeElement;
+  $('#dr-scroll').innerHTML = html; $('#dr-scroll').scrollTop = 0;
+  dr.classList.add('open'); dr.setAttribute('aria-hidden', 'false'); $('#overlay').classList.add('open');
+  setTimeout(() => $('.dr-close', dr)?.focus({ preventScroll:true }), 40);
+}
+function hideDrawer(){
+  const dr = $('#drawer'); if (!dr.classList.contains('open')) return;
+  dr.classList.remove('open'); dr.setAttribute('aria-hidden', 'true'); $('#overlay').classList.remove('open');
+  if (lastFocus && document.contains(lastFocus)) lastFocus.focus({ preventScroll:true });
+}
+function closeDrawer(){ const r = parseHash(); if (r.emp || r.dept) go(state.view); else hideDrawer(); }
+
+function openEmpDrawer(id){
+  const e = E[id];
+  if (!e || (e.hidden && !isAdmin())){ showDrawer(`<div class="dr-head" style="--dir:#8A96A6"><button class="icon-btn dr-close" data-act="close" aria-label="${t('close')}">${ic('x')}</button><div class="emp-hero"><h2 id="dr-title">${t('notFound')}</h2></div></div>`); return; }
+  const d = D[e.dept], mgr = E[e.managerId], acting = actingFor(e);
+  const mk = f => e.manual && e.manual.fields.includes(f) ? `<span class="manual-tag" title="${esc(e.manual.by)} · ${fmtDT(new Date(e.manual.at))}">${ic('lock', 11)}${t('manualMark')}</span>` : '';
+  const callNum = isMobile() ? (e.mobile || e.work) : (e.work || e.mobile);
+  showDrawer(`
+    <div class="dr-head" style="--dir:${dirColor(d)}">
+      <div class="dr-grip"></div>
+      <button class="icon-btn dr-close" data-act="close" aria-label="${t('close')}">${ic('x')}</button>
+      <div class="emp-hero">${avatar(e, 76)}<div><h2 id="dr-title">${esc(nameOf(e))}</h2><p class="muted">${esc(pos(e))}</p>${badge(e, true)}${e.hidden ? ` <span class="manual-tag">${ic('eyeoff', 11)}hidden</span>` : ''}</div></div>
+      ${e.status !== 'work' ? `<div class="absent-box">${periodHTML(e)}${subHTML(e)}${mk('subId')}</div>` : ''}
+      ${acting.length ? `<div class="acting">${ic('users', 14)} ${t('actingFor')}: ${acting.map(a => `<button class="link" data-emp="${a.id}">${esc(shortName(a))}</button>`).join(', ')}</div>` : ''}
+      <div class="big-actions">
+        ${callNum ? `<a class="btn btn-primary btn-lg" href="tel:${callNum.replace(/[^\d+]/g, '')}">${ic('phone')} ${t('call')}</a>` : ''}
+        <a class="btn btn-lg" href="mailto:${esc(e.email)}">${ic('mail')} ${t('writeEmail')}</a>
+      </div>
+    </div>
+    <div class="dr-body">
+      <dl class="fields">
+        <div><dt>${t('department')}</dt><dd><button class="link" data-open-dept="${d.id}">${esc(dname(d))}</button></dd></div>
+        <div><dt>${t('manager')}</dt><dd>${mgr ? `<button class="link" data-emp="${mgr.id}">${esc(shortName(mgr))}</button><span class="muted" style="font-weight:400">${esc(posAbbr(mgr))}</span>` : '—'}</dd></div>
+        <div><dt>${t('workPhone')}</dt><dd>${e.work ? `<a href="tel:${e.work.replace(/[^\d+]/g, '')}" class="mono">${esc(e.work)}</a>${copyBtn(e.work, t('copyPhone'))}` : '—'}</dd></div>
+        <div><dt>${t('internal')}</dt><dd><b class="mono" style="font-size:16px">${esc(e.internal)}</b>${copyBtn(e.internal, t('copyInternal'))}</dd></div>
+        ${e.mobile ? `<div><dt>${t('mobile')}</dt><dd><a href="tel:${e.mobile.replace(/[^\d+]/g, '')}" class="mono">${esc(e.mobile)}</a>${copyBtn(e.mobile, t('copyPhone'))}</dd></div>` : ''}
+        <div><dt>${t('email')}</dt><dd><a href="mailto:${esc(e.email)}">${esc(e.email)}</a>${copyBtn(e.email, 'E-mail')}</dd></div>
+        <div><dt>${t('office')}</dt><dd>${esc(e.office || '—')}${mk('office')}</dd></div>
+      </dl>
+      <div class="dr-actions">
+        ${e.work ? `<button class="btn" data-copy="${esc(e.work)}">${ic('phone', 15)} ${t('copyPhone')}</button>` : ''}
+        <button class="btn" data-copy="${esc(e.internal)}">${ic('hash', 15)} ${t('copyInternal')}</button>
+        <button class="btn" data-show-emp="${e.id}">${ic('target', 15)} ${t('showInTree')}</button>
+        <button class="btn" data-copy-link="emp:${e.id}">${ic('link', 15)} ${t('copyLink')}</button>
+        ${isAdmin() ? `<label class="btn" style="cursor:pointer">${ic('camera', 15)} ${PHOTOS[e.id] ? t('changePhoto') : t('uploadPhoto')}<input type="file" accept="image/*" data-photo-upload="${e.id}" hidden></label>
+          ${PHOTOS[e.id] ? `<button class="btn" data-remove-photo="${e.id}">${ic('trash', 15)} ${t('removePhoto')}</button>` : ''}` : ''}
+      </div>
+      <p class="dr-note">${ic('camera', 12)} ${PHOTOS[e.id] ? '' : t('placeholderNote') + ' '}${isAdmin() ? '' : t('photoHint')}</p>
+      <p class="dr-note" style="margin-top:6px">${ic('refresh', 12)} ${t('updatedAt')} ${fmtDT(state.lastSync)}. ${t('privacy')}</p>
+    </div>`);
+}
+function openDeptDrawer(id){
+  const d = D[id]; if (!d) return;
+  const head = E[d.headId], staff = d.staff.map(x => E[x]).filter(e => !e.hidden);
+  const deputies = staff.filter(isDeputy);
+  const others = staff.filter(e => !e.isHead && !isDeputy(e));
+  const all = deptEmps(id, true), c = counts(all), ch = chain(id).slice(0, -1), kids = kidsOf(d);
+  const alt = state.lang === 'kz' ? d.ru : d.kz;
+  showDrawer(`
+    <div class="dr-head" style="--dir:${dirColor(d)}">
+      <div class="dr-grip"></div>
+      <button class="icon-btn dr-close" data-act="close" aria-label="${t('close')}">${ic('x')}</button>
+      <div class="dept-hero"><span class="dept-ic">${ic('building', 22)}</span><div><span class="tag">${esc(d.sh)}</span><h2 id="dr-title">${esc(dname(d))}</h2><p class="muted alt-name">${state.lang === 'kz' ? 'RU' : 'KZ'}: ${esc(alt)}</p></div></div>
+      ${ch.length ? `<div class="chain">${t('chain')}: ${ch.map(x => `<button class="link" data-open-dept="${x.id}">${esc(dshort(x))}</button>`).join(' → ')}</div>` : ''}
+    </div>
+    <div class="dr-body">
+      <section><h3>${t('head')}</h3>${head && !head.hidden ? personRow(head) : '—'}${head && head.status !== 'work' ? `<div class="absent-box" style="margin-top:6px">${subHTML(head)}</div>` : ''}</section>
+      ${deputies.length ? `<section><h3>${t('deputies')}</h3>${deputies.map(personRow).join('')}</section>` : ''}
+      <section class="grid2">
+        <div><h3>${t('reception')}</h3><a href="tel:${d.phone.replace(/[^\d+]/g, '')}" class="mono">${esc(d.phone)}</a> ${copyBtn(d.phone, t('copyPhone'))}</div>
+        <div><h3>${t('location')}</h3><span style="display:flex;gap:6px;align-items:flex-start">${ic('pin', 15)}${esc(d.loc)}</span></div>
+      </section>
+      <section><h3>${t('statusSummary')} · ${esc(empCount(all.length))}</h3>${statusBars(c, all.length)}</section>
+      ${kids.length ? `<section><h3>${t('subunits')} (${kids.length})</h3>${kids.map(k => `<button class="subrow" data-open-dept="${k.id}"><span>${esc(dname(k))}</span><span class="muted" style="font-size:12px">${esc(empCount(deptEmps(k.id, true).length))}</span>${ic('chevR', 16)}</button>`).join('')}</section>` : ''}
+      ${others.length ? `<section><h3>${t('staff')} (${others.length})</h3>${others.map(personRow).join('')}</section>` : ''}
+      <div class="dr-actions">
+        <button class="btn btn-primary" data-people="${d.id}">${ic('users', 15)} ${t('peopleChart')}</button>
+        <button class="btn" data-show-tree="${d.id}">${ic('target', 15)} ${t('showInTree')}</button>
+        <button class="btn" data-copy-link="dept:${d.id}">${ic('link', 15)} ${t('copyLink')}</button>
+        <button class="btn" data-print-dept="${d.id}">${ic('printer', 15)} ${t('print')}</button>
+        <button class="btn" data-xlsx-dept="${d.id}">${ic('download', 15)} Excel</button>
+      </div>
+    </div>`);
+}
+
+/* =========================================================
+   Search
+   ========================================================= */
+function lev(a, b){
+  if (Math.abs(a.length - b.length) > 2) return 9;
+  const v = Array.from({ length:b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++){
+    let prev = v[0]; v[0] = i;
+    for (let j = 1; j <= b.length; j++){ const tmp = v[j]; v[j] = Math.min(v[j] + 1, v[j - 1] + 1, prev + (a[i - 1] === b[j - 1] ? 0 : 1)); prev = tmp; }
+  }
+  return v[b.length];
+}
+function fuzzyIn(hay, q){
+  if (q.length < 4) return false;
+  const tol = q.length >= 7 ? 2 : 1;
+  return hay.split(/\s+/).some(w => w.length >= q.length - 1 && lev(q, w.slice(0, q.length)) <= tol);
+}
+function scoreEmp(e, raw){
+  const q = norm(raw.trim()); if (!q) return 1;
+  const dig = raw.replace(/\D/g, '');
+  const isDigits = /^[\d\s()+-]+$/.test(raw.trim());
+  if (isDigits && dig.length >= 2){ if (e.internal === dig) return 100; return e._dig.includes(dig) ? 70 : 0; }
+  const words = q.split(/\s+/).filter(Boolean);
+  let total = 0;
+  for (const w of words){
+    let s = 0;
+    if (e._n.startsWith(w)) s = 95;
+    else if (e._n.includes(' ' + w)) s = 85;
+    else if (e._n.includes(w)) s = 70;
+    else if (e._nl.includes(w)) s = 65;
+    else if (e.email.includes(w)) s = 50;
+    else if (e._p.includes(w)) s = 40;
+    else if (e._d.includes(w)) s = 30;
+    else if (fuzzyIn(e._n, w) || fuzzyIn(e._nl, w)) s = 25;
+    if (!s) return 0;
+    total += s;
+  }
+  return total / words.length + (e.isHead ? 2 : 0);
+}
+function scoreDept(d, raw){
+  const q = norm(raw.trim()); if (q.length < 2) return 0;
+  const words = q.split(/\s+/).filter(Boolean);
+  let tot = 0;
+  for (const w of words){ let s = d._n.startsWith(w) ? 90 : d._n.includes(w) ? 70 : d._nl.includes(w) ? 60 : fuzzyIn(d._n, w) ? 25 : 0; if (!s) return 0; tot += s; }
+  return tot / words.length;
+}
+function hl(text, raw){
+  const q = norm(raw.trim()).split(/\s+/)[0]; if (!q || q.length < 2) return esc(text);
+  const i = norm(text).indexOf(q); if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + '<mark>' + esc(text.slice(i, i + q.length)) + '</mark>' + esc(text.slice(i + q.length));
+}
+let qIdx = -1;
+function renderSearch(){
+  const inp = $('#q'), box = $('#q-results'), raw = inp.value;
+  if (raw.trim().length < 2){ box.hidden = true; inp.setAttribute('aria-expanded', 'false'); return; }
+  const t0 = performance.now();
+  const emps = visibleEmps().map(e => [scoreEmp(e, raw), e]).filter(x => x[0] > 0).sort((a, b) => b[0] - a[0]);
+  const depts = DEPTS.map(d => [scoreDept(d, raw), d]).filter(x => x[0] > 0).sort((a, b) => b[0] - a[0]);
+  const ms = Math.round(performance.now() - t0);
+  let h = '';
+  if (emps.length){
+    h += `<div class="q-group">${t('groupEmp')} · ${emps.length}</div>` + emps.slice(0, 7).map(([, e]) => `<button class="q-item" role="option" data-qemp="${e.id}">${avatar(e, 34)}<span class="q-txt"><b>${hl(nameOf(e), raw)}</b><small>${esc(pos(e))} · ${esc(dname(D[e.dept]))}</small></span><span class="q-meta">${e.status !== 'work' ? `<span class="badge st-${e.status}" style="margin-right:6px">${ic(ST[e.status].icon, 11)}</span>` : ''}${t('intShort')} <b class="mono">${hl(e.internal, raw)}</b></span></button>`).join('');
+  }
+  if (depts.length){
+    h += `<div class="q-group">${t('groupDept')} · ${depts.length}</div>` + depts.slice(0, 5).map(([, d]) => `<button class="q-item" role="option" data-qdept="${d.id}"><span class="dept-ic" style="--dir:${dirColor(d)};width:34px;height:34px;border-radius:9px">${ic('building', 17)}</span><span class="q-txt"><b>${hl(dname(d), raw)}</b><small>${d.p ? esc(dshort(D[d.p])) + ' · ' : ''}${esc(empCount(deptEmps(d.id, true).length))}</small></span></button>`).join('');
+  }
+  if (!h) h = `<div class="q-empty">${ic('search', 22)}<br>${t('nothing')}</div>`;
+  h += `<div class="q-foot"><span>${t('keysHint')} · ${ms} мс</span>${emps.length > 7 ? `<button class="link" data-act="search-all">${t('searchAll')} →</button>` : ''}</div>`;
+  box.innerHTML = h; box.hidden = false; inp.setAttribute('aria-expanded', 'true'); qIdx = -1;
+}
+function closeSearch(){ $('#q-results').hidden = true; $('#q').setAttribute('aria-expanded', 'false'); }
+function pickEmp(id){
+  closeSearch(); $('#q').blur();
+  const e = E[id];
+  if (state.view === 'structure'){ curMode() === 'people' ? focusEmp(id) : focusDept(e.dept); }
+  else { state.activeDept = e.dept; chain(e.dept).slice(0, -1).forEach(d => state.expanded.add(d.id)); }
+  openEmp(id);
+}
+function pickDept(id){
+  closeSearch(); $('#q').blur();
+  state.activeDept = id; chain(id).slice(0, -1).forEach(d => state.expanded.add(d.id));
+  if (state.view !== 'structure'){ state.view = 'structure'; }
+  go('structure', { dept:id });
+  setTimeout(() => focusDept(id), 60);
+}
+
+/* =========================================================
+   Directory
+   ========================================================= */
+function dirFiltered(){
+  const f = state.dir;
+  const deptSet = f.dept ? new Set(descendants(f.dept)) : null;
+  let list = visibleEmps().filter(e =>
+    (!deptSet || deptSet.has(e.dept)) && (!f.st.size || f.st.has(e.status)) && (!f.cat || e.cat === f.cat) && (!f.leaders || e.cat === 'L'));
+  if (f.q.trim()) list = list.filter(e => (e._score = scoreEmp(e, f.q)) > 0);
+  const dir = f.asc ? 1 : -1, so = STATUSES.map(s => s.code);
+  const cmp = {
+    name:(a, b) => a.ru.localeCompare(b.ru, 'ru'),
+    pos:(a, b) => pos(a).localeCompare(pos(b), 'ru'),
+    dept:(a, b) => D[a.dept].order - D[b.dept].order || (b.isHead - a.isHead),
+    int:(a, b) => +a.internal - +b.internal,
+    status:(a, b) => so.indexOf(a.status) - so.indexOf(b.status)
+  }[f.sort];
+  return list.sort((a, b) => cmp(a, b) * dir || a.ru.localeCompare(b.ru, 'ru'));
+}
+function renderDirectory(v){
+  const f = state.dir;
+  v.innerHTML = `<div class="page">
+    <div class="page-head">
+      <div><h1>${t('nav_directory')}</h1><p class="muted">${t('dirSub')}</p></div>
+      <div class="page-actions">
+        ${canStatusExport() ? `<label class="chk"><input type="checkbox" id="exp-st" ${f.withStatus ? 'checked' : ''}> ${t('includeStatuses')}</label>` : ''}
+        <button class="btn" data-act="dir-print">${ic('printer', 16)} ${t('print')}</button>
+        <button class="btn btn-primary" data-act="dir-xlsx">${ic('download', 16)} ${t('exportXlsx')}</button>
+      </div>
+    </div>
+    <div class="filters card">
+      <label class="f-search">${ic('search', 16)}<input id="dir-q" type="search" value="${esc(f.q)}" placeholder="${esc(t('dirSearchPh'))}" aria-label="${esc(t('dirSearchPh'))}"></label>
+      <select id="dir-dept" aria-label="${t('department')}" style="max-width:280px">${deptOptions(f.dept, true)}</select>
+      <select id="dir-cat" aria-label="category"><option value="">${t('allCats')}</option>${['L','S','W'].map(c => `<option value="${c}" ${f.cat === c ? 'selected' : ''}>${t('cat_' + c)}</option>`).join('')}</select>
+      <label class="chk"><input type="checkbox" id="dir-lead" ${f.leaders ? 'checked' : ''}> ${t('leadersOnly')}</label>
+      <div class="chips" role="group" aria-label="${t('status')}">${STATUSES.map(s => `<button class="chip st-${s.code}" data-stf="${s.code}" aria-pressed="${f.st.has(s.code)}">${ic(s.icon, 12)}${esc(sName(s.code))}</button>`).join('')}</div>
+      <button class="btn btn-ghost" data-act="dir-reset">${t('reset')}</button>
+    </div>
+    <div class="card tbl-wrap" id="dir-table"></div>
+  </div>`;
+  const q = $('#dir-q');
+  q.addEventListener('input', () => { f.q = q.value; f.page = 1; renderDirTable(); });
+  $('#dir-dept').addEventListener('change', e => { f.dept = e.target.value; f.page = 1; renderDirTable(); });
+  $('#dir-cat').addEventListener('change', e => { f.cat = e.target.value; f.page = 1; renderDirTable(); });
+  $('#dir-lead').addEventListener('change', e => { f.leaders = e.target.checked; f.page = 1; renderDirTable(); });
+  $('#exp-st')?.addEventListener('change', e => { f.withStatus = e.target.checked; });
+  renderDirTable();
+}
+function renderDirTable(){
+  const f = state.dir, list = dirFiltered(), per = 15, pages = Math.max(1, Math.ceil(list.length / per));
+  f.page = clamp(f.page, 1, pages);
+  const rows = list.slice((f.page - 1) * per, f.page * per);
+  const th = (k, label) => `<th><button data-sort="${k}" ${f.sort === k ? `aria-sort="${f.asc ? 'ascending' : 'descending'}"` : ''}>${label}${f.sort === k ? ic(f.asc ? 'up' : 'chev', 13) : ''}</button></th>`;
+  const el = $('#dir-table'); if (!el) return;
+  if (!list.length){ el.innerHTML = `<div class="empty">${ic('search', 32)}<b>${t('nothing')}</b>${t('nothingHint')}</div>`; return; }
+  el.innerHTML = `<table class="tbl"><thead><tr>${th('name', t('col_fio'))}${th('dept', t('col_dept'))}<th>${t('col_work')}</th>${th('int', t('col_int'))}<th>${t('col_email')}</th>${th('status', t('col_status'))}</tr></thead>
+    <tbody>${rows.map(e => `<tr>
+      <td class="c-who"><button class="who" data-emp="${e.id}">${avatar(e, 36)}<span><b>${hl(nameOf(e), f.q)}</b><small>${esc(pos(e))}</small></span></button></td>
+      <td data-l="${t('col_dept')}"><button class="link" style="font-weight:400" data-open-dept="${e.dept}">${esc(dname(D[e.dept]))}</button></td>
+      <td data-l="${t('col_work')}" class="mono">${e.work ? `<a href="tel:${e.work.replace(/[^\d+]/g, '')}" style="color:inherit;text-decoration:none">${esc(e.work)}</a>` : '<span class="muted">—</span>'}</td>
+      <td data-l="${t('col_int')}"><b class="mono">${esc(e.internal)}</b> ${copyBtn(e.internal, t('copyInternal'))}</td>
+      <td data-l="${t('col_email')}"><a href="mailto:${esc(e.email)}" style="color:inherit">${esc(e.email)}</a></td>
+      <td data-l="${t('col_status')}">${badge(e)}</td></tr>`).join('')}</tbody></table>
+    <div class="tbl-foot"><span>${t('found')}: <b>${list.length}</b></span>
+      <div class="pager"><button data-page="${f.page - 1}" ${f.page <= 1 ? 'disabled' : ''} aria-label="${t('prev')}">${ic('chevL', 15)}</button>
+      ${Array.from({ length:pages }, (_, i) => `<button data-page="${i + 1}" ${f.page === i + 1 ? 'aria-current="page"' : ''}>${i + 1}</button>`).join('')}
+      <button data-page="${f.page + 1}" ${f.page >= pages ? 'disabled' : ''} aria-label="${t('next')}">${ic('chevR', 15)}</button></div></div>`;
+}
+
+/* =========================================================
+   Leaders / Absent
+   ========================================================= */
+function leaderCard(e, d, big){
+  return `<article class="card lead-card" style="--dir:${dirColor(d)}">
+    <button class="lead-top" data-emp="${e.id}">${avatar(e, big ? 72 : 56)}<span><span class="dir-tag">${esc(dname(d))}</span><h3>${esc(nameOf(e))}</h3><p>${esc(pos(e))}</p><span style="display:inline-block;margin-top:6px">${badge(e)}</span></span></button>
+    ${e.status !== 'work' ? `<div class="absent-box" style="margin:0">${subHTML(e)}</div>` : ''}
+    <div class="contacts">
+      ${e.work ? `<div>${ic('phone', 15)}<a href="tel:${e.work.replace(/[^\d+]/g, '')}" class="mono">${esc(e.work)}</a></div>` : ''}
+      <div>${ic('hash', 15)}${t('intShort')} <b class="mono">${esc(e.internal)}</b></div>
+      <div>${ic('building', 15)}${t('receptionShort')}: <a href="tel:${d.phone.replace(/[^\d+]/g, '')}" class="mono">${esc(d.phone)}</a></div>
+      <div>${ic('mail', 15)}<a href="mailto:${esc(e.email)}">${esc(e.email)}</a></div>
+    </div>
+    <div class="lead-actions"><button class="btn" data-emp="${e.id}">${ic('user', 15)} ${t('openCard')}</button><button class="btn" data-show-tree="${d.id}">${ic('target', 15)} ${t('showInTree')}</button></div>
+  </article>`;
+}
+function renderLeaders(v){
+  const gd = E[D.d0.headId];
+  v.innerHTML = `<div class="page">
+    <div class="page-head"><div><h1>${t('nav_leaders')}</h1><p class="muted">${t('leadersSub')}</p></div></div>
+    <div style="max-width:560px;margin-bottom:18px">${leaderCard(gd, D.d0, true)}</div>
+    <div class="lead-grid">${D.d0.children.map(id => { const d = D[id], e = E[d.headId]; return e && !e.hidden ? leaderCard(e, d) : ''; }).join('')}</div>
+  </div>`;
+}
+function renderAbsent(v){
+  const deptSet = state.absDept ? new Set(descendants(state.absDept)) : null;
+  const list = absentToday().filter(e => !deptSet || deptSet.has(e.dept));
+  const groups = STATUSES.filter(s => s.code !== 'work').map(s => [s, deptSorted(list.filter(e => e.status === s.code))]).filter(g => g[1].length);
+  v.innerHTML = `<div class="page">
+    <div class="page-head"><div><h1>${t('nav_absent')}</h1><p class="muted">${fmtLong(TODAY)} · ${t('absentSub')}</p></div>
+      <div class="page-actions"><select id="abs-dept" aria-label="${t('department')}" style="max-width:320px">${deptOptions(state.absDept, true)}</select></div></div>
+    ${groups.length ? groups.map(([s, items]) => `<section class="abs-group st-${s.code}">
+      <h2><span class="sdot" style="width:22px;height:22px">${ic(s.icon, 13)}</span>${esc(sName(s.code))} <span class="cnt">· ${items.length}</span></h2>
+      <div class="card">${items.map(e => `<div class="abs-row">
+        <button class="abs-who" data-emp="${e.id}">${avatar(e, 42)}<span><b>${esc(nameOf(e))}</b><small>${esc(pos(e))}</small><small>${esc(dname(D[e.dept]))}</small></span></button>
+        ${periodHTML(e)}
+        <div>${subHTML(e) || '<span class="muted">—</span>'}</div>
+      </div>`).join('')}</div></section>`).join('') : `<div class="card empty">${ic('check', 32)}<b>${t('allPresent')}</b></div>`}
+  </div>`;
+  $('#abs-dept').addEventListener('change', e => { state.absDept = e.target.value; renderAbsent(v); });
+}
+
+/* =========================================================
+   Admin
+   ========================================================= */
+function renderAdmin(v){
+  if (!isAdmin()){
+    v.innerHTML = `<div class="page"><div class="card noaccess">${ic('lock', 40)}<h1 style="font-size:20px;margin:12px 0 6px">${t('noAccess')}</h1><p class="muted">${t('noAccessText')}</p><p class="muted"><span class="code">403 · /admin</span></p></div></div>`;
+    return;
+  }
+  const ov = store.get('overrides', {});
+  const empOpts = EMPS.slice().sort((a, b) => a.ru.localeCompare(b.ru, 'ru')).map(e => `<option value="${e.id}">${esc(e.ru)} — ${esc(D[e.dept].sh)}</option>`).join('');
+  v.innerHTML = `<div class="page">
+    <div class="page-head"><div><h1>${t('adminTitle')}</h1><p class="muted">${t('adminSub')} · ${t('role_' + state.role)}</p></div></div>
+    <div class="admin-grid">
+      <section class="card panel">
+        <h2>${ic('refresh', 18)} ${t('syncTitle')}</h2><p>${t('syncText')}</p>
+        <dl class="kv"><dt>${t('lastSync')}</dt><dd id="adm-last">${fmtDT(state.lastSync)}</dd><dt>${t('schedule')}</dt><dd>${t('scheduleVal')}</dd></dl>
+        <button class="btn btn-primary" data-act="run-sync" id="sync-btn">${ic('refresh', 16)} ${t('runSync')}</button>
+        <div class="progress" id="sync-prog" hidden><i></i></div>
+      </section>
+      <section class="card panel">
+        <h2>${ic('file', 18)} ${t('manual')}</h2><p>${t('manualText')}</p>
+        <div class="form-grid">
+          <label class="full">${t('employee')}<select id="adm-emp">${empOpts}</select></label>
+          <label class="full">${t('office')}<input class="input" id="adm-office"></label>
+          <label class="full">${t('substituteFull')}<select id="adm-sub"><option value="">${t('autoSub')}</option>${empOpts}</select></label>
+          <label class="chk full" style="flex-direction:row;color:var(--text)"><input type="checkbox" id="adm-hidden"> ${t('hideEmp')}</label>
+          <div class="full"><button class="btn btn-primary" data-act="adm-save">${ic('check', 16)} ${t('save')}</button></div>
+        </div>
+      </section>
+      <section class="card panel span2">
+        <h2>${ic('camera', 18)} ${t('photosTitle')}</h2><p>${t('photosText')}</p>
+        <div class="photo-stat"><b>${t('photosStat')}: ${Object.keys(PHOTOS).filter(id => E[id]).length} / ${EMPS.length}</b>
+          <label class="btn btn-primary" style="cursor:pointer">${ic('download', 16)} ${t('bulkUpload')}<input type="file" id="bulk-photos" accept="image/*" multiple hidden></label>
+          <button class="btn" data-act="clear-photos">${ic('trash', 16)} ${t('clearPhotos')}</button></div>
+        <div class="photo-strip">${EMPS.slice().sort((a, b) => !!PHOTOS[a.id] - !!PHOTOS[b.id] || D[a.dept].order - D[b.dept].order).map(e => `<button class="${PHOTOS[e.id] ? 'has' : ''}" data-emp="${e.id}" title="${esc(e.ru)} · ${t('intShort')} ${esc(e.internal)}">${avatar(e, 42, false)}</button>`).join('')}</div>
+      </section>
+      <section class="card panel span2">
+        <h2>${ic('clock', 18)} ${t('syncLog')}</h2>
+        <table class="tbl"><thead><tr><th>${t('lg_time')}</th><th>${t('lg_source')}</th><th>${t('lg_result')}</th><th>${t('lg_changes')}</th><th>${t('lg_errors')}</th></tr></thead>
+        <tbody>${state.syncLog.map(l => `<tr><td data-l="${t('lg_time')}" class="mono">${fmtDT(l.at)}</td><td data-l="${t('lg_source')}">${l.src === 'adSync' ? 'Active Directory' : '1С:ЗУП'} — ${t(l.src)}</td><td data-l="${t('lg_result')}"><span class="res ${l.res}">${t(l.res)}</span></td><td data-l="${t('lg_changes')}" class="mono">${l.ch}</td><td data-l="${t('lg_errors')}" class="muted">${esc(l.err || '—')}</td></tr>`).join('')}</tbody></table>
+      </section>
+      <section class="card panel">
+        <h2>${ic('lock', 18)} ${t('manualList')}</h2>
+        ${Object.keys(ov).length ? Object.entries(ov).map(([id, o]) => { const e = E[id]; return e ? `<div class="person" style="cursor:default">${avatar(e, 36)}<span class="p-txt"><b>${esc(shortName(e))}</b><small>${(o.fields || []).map(f => f === 'subId' ? t('substituteFull') : f === 'office' ? t('office') : t('hideEmp')).join(', ')} · ${esc(o.by)} · ${fmtDT(new Date(o.at))}</small></span><button class="btn" style="height:32px;font-size:12.5px" data-revert="${id}">${t('revert')}</button></div>` : ''; }).join('') : `<p class="muted">${t('noManual')}</p>`}
+      </section>
+      <section class="card panel">
+        <h2>${ic('list', 18)} ${t('statusTypes')}</h2>
+        <table class="tbl"><thead><tr><th></th><th>RU / KZ</th><th>${t('st_code')}</th><th>${t('st_export')}</th></tr></thead>
+        <tbody>${STATUSES.map(s => `<tr class="st-${s.code}"><td><span class="swatch">${ic(s.icon, 13)}</span></td><td>${s.ru}<br><span class="muted">${s.kz}</span></td><td data-l="${t('st_code')}">${s.hr.map(c => `<span class="code">${c}</span>`).join(' ')}</td><td data-l="${t('st_export')}">${s.exp ? t('yes') : t('no')}</td></tr>`).join('')}</tbody></table>
+      </section>
+      <section class="card panel span2">
+        <h2>${ic('book', 18)} ${t('audit')}</h2>
+        <table class="tbl"><thead><tr><th>${t('lg_time')}</th><th>${t('au_user')}</th><th>${t('au_action')}</th><th>${t('au_obj')}</th></tr></thead>
+        <tbody>${state.audit.slice().reverse().map(a => `<tr><td data-l="${t('lg_time')}" class="mono">${fmtDT(new Date(a.at))}</td><td data-l="${t('au_user')}"><span class="code">${esc(a.user)}</span></td><td data-l="${t('au_action')}">${esc(t(a.action))}</td><td data-l="${t('au_obj')}">${esc(a.obj)}</td></tr>`).join('')}</tbody></table>
+      </section>
+    </div></div>`;
+  const sel = $('#adm-emp');
+  const fill = () => { const e = E[sel.value]; $('#adm-office').value = e.office || ''; $('#adm-sub').value = (ov[e.id] && ov[e.id].subId) || ''; $('#adm-hidden').checked = !!e.hidden; };
+  sel.addEventListener('change', fill); fill();
+}
+const adminUser = () => state.role === 'hr' ? 'hr.admin' : 'sys.admin';
+function addAudit(action, obj){ state.audit.push({ at:new Date().toISOString(), user:adminUser(), action, obj }); store.set('audit', state.audit.slice(-60)); }
+function adminSave(){
+  const id = $('#adm-emp').value, e = E[id], ov = store.get('overrides', {});
+  const office = $('#adm-office').value.trim(), subId = $('#adm-sub').value, hidden = $('#adm-hidden').checked;
+  const fields = [];
+  if (office && office !== e._orig.office) fields.push('office');
+  if (subId && subId !== e._orig.subId) fields.push('subId');
+  if (hidden) fields.push('hidden');
+  if (!fields.length) delete ov[id];
+  else ov[id] = { office:fields.includes('office') ? office : null, subId:fields.includes('subId') ? subId : null, hidden, fields, by:adminUser(), at:new Date().toISOString() };
+  store.set('overrides', ov);
+  applyOverrides();
+  addAudit('auditEdit', `${shortName(e)} — ${fields.length ? fields.join(', ') : '∅'}`);
+  toast(t('saved'));
+  renderView();
+}
+function adminRevert(id){
+  const ov = store.get('overrides', {}); delete ov[id]; store.set('overrides', ov); applyOverrides();
+  addAudit('auditRevert', shortName(E[id])); toast(t('saved')); renderView();
+}
+function runSync(){
+  const btn = $('#sync-btn'), prog = $('#sync-prog'); if (!btn || btn.disabled) return;
+  btn.disabled = true; btn.innerHTML = `${ic('refresh', 16)} ${t('syncing')}`; prog.hidden = false;
+  const bar = $('i', prog); let p = 0;
+  const iv = setInterval(() => { p = Math.min(100, p + 9 + Math.random() * 14); bar.style.width = p + '%'; if (p >= 100){ clearInterval(iv); done(); } }, 160);
+  function done(){
+    state.lastSync = new Date();
+    state.syncLog.unshift({ at:state.lastSync, src:'statusSync', res:'ok', ch:Math.floor(Math.random() * 4), err:'' });
+    addAudit('auditSync', '1С:ЗУП + Active Directory');
+    toast(t('syncDone'));
+    renderView();
+  }
+}
+
+/* =========================================================
+   Export / print
+   ========================================================= */
+function exportXlsx(list, scope){
+  const withSt = canStatusExport() && state.dir.withStatus;
+  const rows = deptSorted(list).map(e => {
+    const r = { [t('col_dept')]:dname(D[e.dept]), [t('col_fio')]:nameOf(e), [t('col_pos')]:pos(e), [t('col_work')]:e.work || '', [t('col_int')]:e.internal, [t('col_email')]:e.email, [t('col_office')]:e.office || '' };
+    if (withSt) r[t('col_status')] = statusText(e);
+    return r;
+  });
+  const fname = `spravochnik_anpz_${scope}_${fmtD(new Date()).split('.').reverse().join('-')}`;
+  if (window.XLSX){
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws['!cols'] = [{ wch:42 }, { wch:36 }, { wch:44 }, { wch:20 }, { wch:10 }, { wch:28 }, { wch:34 }, { wch:28 }];
+    ws['!autofilter'] = { ref:ws['!ref'] };
+    const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, state.lang === 'kz' ? 'Анықтамалық' : 'Справочник');
+    XLSX.writeFile(wb, fname + '.xlsx');
+  } else {
+    const keys = Object.keys(rows[0] || {});
+    const csv = '﻿' + [keys, ...rows.map(r => keys.map(k => r[k]))].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(';')).join('\r\n');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type:'text/csv;charset=utf-8' })); a.download = fname + '.csv'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+  toast(t('exportDone'));
+}
+function setPage(size){ let s = $('#page-style'); if (!s){ s = document.createElement('style'); s.id = 'page-style'; document.head.appendChild(s); } s.textContent = `@page{size:${size};margin:10mm}`; }
+function printDirectory(list, title){
+  const sorted = deptSorted(list); let cur = null, rows = '';
+  sorted.forEach(e => {
+    if (e.dept !== cur){ cur = e.dept; rows += `<tr class="grp"><td colspan="6">${esc(dname(D[e.dept]))} · ${t('receptionShort')} ${esc(D[e.dept].phone)}</td></tr>`; }
+    rows += `<tr><td><b>${esc(nameOf(e))}</b></td><td>${esc(pos(e))}</td><td>${esc(e.work || '—')}</td><td><b>${esc(e.internal)}</b></td><td>${esc(e.email)}</td><td>${esc(e.office || '')}</td></tr>`;
+  });
+  $('#print-area').innerHTML = `<div class="pr-head"><div class="logo" style="width:42px;height:42px;border-radius:10px;background:linear-gradient(140deg,#F2A900 0 38%,#0B3B6F 38% 100%)"></div><div><h1>${t('printTitle')} · ТОО «АНПЗ»</h1><div>${esc(title)}</div></div><div class="pr-date">${t('formed')}: ${fmtDT(new Date())}<br>${t('updatedAt')} ${fmtDT(state.lastSync)}</div></div>
+    <table><thead><tr><th>${t('col_fio')}</th><th>${t('col_pos')}</th><th>${t('col_work')}</th><th>${t('col_int')}</th><th>${t('col_email')}</th><th>${t('col_office')}</th></tr></thead><tbody>${rows}</tbody></table>
+    <div class="pr-foot">${t('forOfficial')} · ${list.length} ${t('persons')}</div>`;
+  setPage('A4 landscape');
+  document.body.classList.add('printing-dir');
+  const done = () => document.body.classList.remove('printing-dir');
+  window.addEventListener('afterprint', done, { once:true });
+  setTimeout(() => { window.print(); setTimeout(done, 500); }, 50);
+}
+function printTree(){
+  const cv = $('#cv'); if (!cv) return;
+  const w = cv.offsetWidth, h = cv.offsetHeight, s = Math.min(1, 1500 / w, 1000 / h);
+  setPage('A3 landscape');
+  document.body.classList.add('printing-tree');
+  cv.style.transform = `scale(${s})`;
+  const vp = $('#vp'); vp.style.height = (h * s + 10) + 'px';
+  const done = () => { document.body.classList.remove('printing-tree'); vp.style.height = ''; applyTf(); };
+  window.addEventListener('afterprint', done, { once:true });
+  setTimeout(() => { window.print(); setTimeout(done, 500); }, 50);
+}
+
+/* =========================================================
+   Misc UI
+   ========================================================= */
+function toast(msg){
+  const el = document.createElement('div'); el.className = 'toast'; el.innerHTML = `${ic('check', 16)}<span>${esc(msg)}</span>`;
+  $('#toasts').appendChild(el); setTimeout(() => el.remove(), 2200);
+}
+async function copy(text, msg){
+  try { await navigator.clipboard.writeText(text); }
+  catch (e){ const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (_) {} ta.remove(); }
+  toast(msg || `${t('copied')}: ${text}`);
+}
+
+/* =========================================================
+   Global events
+   ========================================================= */
+document.addEventListener('click', e => {
+  const tg = e.target.closest('button, a, [data-sum], [data-emp]'); if (!tg) { closeMenus(e); return; }
+  if (tg.dataset.people){ showPeople(tg.dataset.people); return; }
+  if (tg.dataset.ptoggle){ togglePerson(tg.dataset.ptoggle); return; }
+  if (tg.dataset.showEmp){ const id = tg.dataset.showEmp, em = E[id]; go('structure'); setTimeout(() => curMode() === 'people' ? focusEmp(id) : focusDept(em.dept), 80); return; }
+  if (tg.dataset.removePhoto){ const id = tg.dataset.removePhoto; delete PHOTOS[id]; savePhotos(); addAudit('auditPhotoDel', shortName(E[id])); toast(t('photoRemoved')); afterPhotoChange(); return; }
+  const ds = tg.dataset;
+  if (!e.target.closest('.user')) closeMenus(e);
+  const href = tg.getAttribute('href');
+  if (href && href.startsWith('#/')){ e.preventDefault(); curHash = href; try { history.pushState(null, '', href); } catch (_) {} route(); return; }
+  if (ds.lang){ state.lang = ds.lang; store.set('lang', state.lang); applyI18n(); renderUser(); rerender(); if ($('#q').value) renderSearch(); return; }
+  if (tg.id === 'theme-btn'){ state.theme = effTheme() === 'dark' ? 'light' : 'dark'; store.set('theme', state.theme); applyTheme(); renderUser(); return; }
+  if (tg.id === 'user-btn'){ const m = $('#user-menu'); m.hidden = !m.hidden; tg.setAttribute('aria-expanded', String(!m.hidden)); return; }
+  if (ds.role){ state.role = ds.role; store.set('role', state.role); renderUser(); rerender(); return; }
+  if (ds.themeSet){ state.theme = ds.themeSet; store.set('theme', state.theme); applyTheme(); renderUser(); return; }
+  if (ds.qemp){ pickEmp(ds.qemp); return; }
+  if (ds.qdept){ pickDept(ds.qdept); return; }
+  if (ds.toggle){ toggleDept(ds.toggle); return; }
+  if (ds.emp){ e.preventDefault(); openEmp(ds.emp); return; }
+  if (ds.openDept){ state.activeDept = ds.openDept; if (state.renderedView === 'structure'){ renderCrumbs(); $$('.node.active,.acc.active').forEach(n => n.classList.remove('active')); $$(`[data-node="${ds.openDept}"]`).forEach(n => n.classList.add('active')); drawMinimapSoon(); } openDept(ds.openDept); return; }
+  if (ds.crumb){ focusDept(ds.crumb); return; }
+  if (ds.showTree){ state.activeDept = ds.showTree; chain(ds.showTree).forEach(d => state.expanded.add(d.id)); state.expanded.delete(ds.showTree); if (state.view === 'structure'){ go('structure'); focusDept(ds.showTree); } else { go('structure'); setTimeout(() => focusDept(ds.showTree), 80); } return; }
+  if (ds.copy){ copy(ds.copy); return; }
+  if (ds.copyLink){ const [k, id] = ds.copyLink.split(':'); copy(linkFor(k, id), t('linkCopied')); return; }
+  if (ds.printDept){ printDirectory(deptEmps(ds.printDept, true), dname(D[ds.printDept])); return; }
+  if (ds.xlsxDept){ exportXlsx(deptEmps(ds.xlsxDept, true), D[ds.xlsxDept].sh.replace(/\W+/g, '') || ds.xlsxDept); return; }
+  if (ds.mode){ state.mode = ds.mode; store.set('mode2', ds.mode); state.tf = null; renderView(); return; }
+  if (ds.sum){ state.dir = { ...state.dir, q:'', dept:'', st:new Set(ds.sum === 'work' ? ['work'] : [ds.sum]), cat:'', leaders:false, page:1 }; go('directory'); return; }
+  if (ds.sort){ const f = state.dir; if (f.sort === ds.sort) f.asc = !f.asc; else { f.sort = ds.sort; f.asc = true; } renderDirTable(); return; }
+  if (ds.page){ state.dir.page = +ds.page; renderDirTable(); $('#dir-table')?.scrollIntoView({ block:'nearest' }); return; }
+  if (ds.stf){ const s = state.dir.st; s.has(ds.stf) ? s.delete(ds.stf) : s.add(ds.stf); tg.setAttribute('aria-pressed', String(s.has(ds.stf))); state.dir.page = 1; renderDirTable(); return; }
+  if (ds.revert){ adminRevert(ds.revert); return; }
+  switch (ds.act){
+    case 'close': closeDrawer(); break;
+    case 'zoom-in': { const vp = $('#vp'); zoomAt(vp.clientWidth / 2, vp.clientHeight / 2, 1.25, true); break; }
+    case 'zoom-out': { const vp = $('#vp'); zoomAt(vp.clientWidth / 2, vp.clientHeight / 2, 1 / 1.25, true); break; }
+    case 'fit': fit(); break;
+    case 'expand-all':
+      if (curMode() === 'people') state.pexp = new Set(peopleKids(state.pDept).km.keys()); else DEPTS.forEach(d => d.children.length && state.expanded.add(d.id));
+      curMode() !== 'list' ? (renderTree(), requestAnimationFrame(() => fit())) : renderList(); break;
+    case 'collapse-all':
+      if (curMode() === 'people') state.pexp = new Set([D[state.pDept].headId]); else state.expanded = new Set(['d0']);
+      curMode() !== 'list' ? (renderTree(), requestAnimationFrame(() => fit())) : renderList(); break;
+    case 'clear-photos': if (confirm(t('clearConfirm'))){ PHOTOS = {}; savePhotos(); addAudit('auditPhotoDel', '∀'); toast(t('photoRemoved')); afterPhotoChange(); } break;
+    case 'print-tree': printTree(); break;
+    case 'dir-reset': state.dir = { ...state.dir, q:'', dept:'', st:new Set(), cat:'', leaders:false, page:1 }; renderView(); break;
+    case 'dir-xlsx': exportXlsx(dirFiltered(), state.dir.dept ? D[state.dir.dept].sh.replace(/\W+/g, '') || 'dept' : 'all'); break;
+    case 'dir-print': printDirectory(dirFiltered(), state.dir.dept ? dname(D[state.dir.dept]) : t('wholePlant')); break;
+    case 'search-all': { const q = $('#q').value; closeSearch(); state.dir = { ...state.dir, q, dept:'', st:new Set(), cat:'', leaders:false, page:1 }; if (state.view === 'directory') renderView(); else go('directory'); break; }
+    case 'run-sync': runSync(); break;
+    case 'adm-save': adminSave(); break;
+  }
+});
+function closeMenus(e){
+  const m = $('#user-menu'); if (!m.hidden && !(e && e.target.closest('.user'))){ m.hidden = true; $('#user-btn').setAttribute('aria-expanded', 'false'); }
+  if (!(e && e.target.closest('#search'))) closeSearch();
+}
+$('#overlay').addEventListener('click', closeDrawer);
+const qInput = $('#q');
+qInput.addEventListener('input', renderSearch);
+qInput.addEventListener('focus', () => { if (qInput.value.trim().length >= 2) renderSearch(); });
+qInput.addEventListener('keydown', e => {
+  const items = $$('#q-results .q-item');
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp'){
+    e.preventDefault(); if (!items.length) return;
+    qIdx = (qIdx + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+    items.forEach((it, i) => it.classList.toggle('active', i === qIdx)); items[qIdx].scrollIntoView({ block:'nearest' });
+  } else if (e.key === 'Enter'){
+    e.preventDefault(); (items[qIdx] || items[0])?.click();
+  } else if (e.key === 'Escape'){ closeSearch(); qInput.blur(); }
+});
+document.addEventListener('keydown', e => {
+  const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName);
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k' || (e.key === '/' && !typing)){ e.preventDefault(); qInput.focus(); qInput.select(); return; }
+  if (e.key === 'Escape'){ if ($('#drawer').classList.contains('open')) closeDrawer(); closeMenus(); }
+  if ((e.key === 'Enter' || e.key === ' ') && document.activeElement?.classList.contains('pnode')){ e.preventDefault(); document.activeElement.click(); }
+});
+
+/* photo uploads (single in employee card, bulk in admin panel) */
+function afterPhotoChange(){ renderView(); route(); }
+function matchPhotoFile(name){
+  const base = name.replace(/\.[^.]+$/, '').trim(), low = base.toLowerCase(), n = norm(base).replace(/[_\-.]+/g, ' ').replace(/\s+/g, ' ').trim();
+  if (/^\d{3,5}$/.test(base)) return EMPS.find(e => e.internal === base);
+  return EMPS.find(e => e.email.split('@')[0] === low)
+    || EMPS.find(e => { const a = norm(e.last + ' ' + e.first), full = norm(e.ru); return n === a || n === full || n === translit(a) || n === translit(full); })
+    || EMPS.find(e => n === norm(e.last) && EMPS.filter(x => x.last === e.last).length === 1);
+}
+document.addEventListener('change', async e => {
+  const inp = e.target;
+  if (inp.dataset && inp.dataset.photoUpload && inp.files && inp.files[0]){
+    const id = inp.dataset.photoUpload;
+    try {
+      const prev = PHOTOS[id]; PHOTOS[id] = await resizeImage(inp.files[0]);
+      const saved = savePhotos();
+      if (!saved){ if (prev) PHOTOS[id] = prev; else delete PHOTOS[id]; toast(t('storageFull')); return; }
+      addAudit('auditPhoto', shortName(E[id])); toast(saved === 'session' ? t('photoSession') : t('photoSaved')); afterPhotoChange();
+    } catch (err){ toast('✕ ' + err.message); }
+  }
+  if (inp.id === 'bulk-photos' && inp.files && inp.files.length){
+    let ok = 0; const miss = [];
+    for (const f of inp.files){
+      const emp = matchPhotoFile(f.name);
+      if (!emp){ miss.push(f.name); continue; }
+      try { PHOTOS[emp.id] = await resizeImage(f); ok++; } catch (_) { miss.push(f.name); }
+    }
+    const saved = savePhotos();
+    if (!saved){ PHOTOS = store.get('photos', {}); toast(t('storageFull')); return; }
+    if (saved === 'session') toast(t('photoSession'));
+    addAudit('auditPhoto', `${ok} шт.`);
+    toast(`${t('bulkDone')}: ${ok}${miss.length ? ` · ${t('unmatched')}: ${miss.length}` : ''}`);
+    if (miss.length) console.info('Unmatched photo files:', miss);
+    afterPhotoChange();
+  }
+});
+let wasMobile = isMobile();
+window.addEventListener('resize', () => { const m = isMobile(); if (m !== wasMobile){ wasMobile = m; if (!state.mode && state.renderedView === 'structure') renderView(); } });
+
+/* =========================================================
+   Boot
+   ========================================================= */
+buildData();
+applyTheme(); applyI18n(); renderUser();
+$('#view').innerHTML = `<div class="sk-wrap"><div class="sk" style="width:60%;height:34px"></div><div class="sk" style="width:290px;height:120px"></div><div class="sk-row">${'<div class="sk" style="width:248px;height:118px"></div>'.repeat(5)}</div></div>`;
+state.view = parseHash().view; renderNav();
+setTimeout(route, 300);
+})();
+</script>
+</body>
+</html>
